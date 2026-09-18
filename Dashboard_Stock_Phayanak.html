@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Stock Dashboard - สายยางพญานาค (HomePro & Mega Home)</title>
+  <!-- Tailwind CSS & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Sarabun', sans-serif; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Top Header Navigation -->
+  <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 bg-amber-500 text-slate-900 text-xs font-bold rounded-full uppercase tracking-wider">Executive Report</span>
+          <span class="text-xs text-blue-200">อัปเดตล่าสุด: 16 ตุลาคม 2026</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mt-1 flex items-center gap-2">
+          📊 รายงานสินค้าคงเหลือ: ตราพญานาค
+        </h1>
+        <p class="text-sm text-blue-200 mt-0.5">เครือ HomePro & Mega Home | บจ. ทีทีที คอร์ปอเรชั่น</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 no-print">
+        <button onclick="window.print()" class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition flex items-center gap-2">
+          🖨️ พิมพ์ / บันทึก PDF
+        </button>
+        <button onclick="exportToCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2">
+          📥 ส่งออก Excel (CSV)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Executive KPI Metric Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <!-- Total Value -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 relative overflow-hidden">
+        <div class="absolute right-3 top-3 opacity-10 text-5xl">💰</div>
+        <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">มูลค่าราคาเต็มคงเหลือรวม (On Hand Value)</p>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-val">฿1,027,616.02</span>
+        </div>
+        <div class="mt-3 flex items-center text-xs text-slate-500">
+          <span class="text-emerald-600 font-semibold flex items-center gap-1">📉 ลดลง 27.52%</span>
+          <span class="ml-1">จาก มิ.ย. (฿1,417,737.42) หมุนเวียนสต็อกดีขึ้น</span>
+        </div>
+      </div>
+
+      <!-- Total Qty -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 relative overflow-hidden">
+        <div class="absolute right-3 top-3 opacity-10 text-5xl">📦</div>
+        <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">จำนวนชิ้น/ม้วนคงเหลือ (On Hand Qty)</p>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-qty">20,726</span>
+          <span class="text-sm font-medium text-slate-500">ม้วน/ชิ้น</span>
+        </div>
+        <div class="mt-3 text-xs text-slate-500 flex items-center justify-between">
+          <span>พร้อมขาย (Available):</span>
+          <span class="font-bold text-slate-700">19,293 ม้วน (93.1%)</span>
+        </div>
+      </div>
+
+      <!-- Total SKUs & Sites -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 relative overflow-hidden">
+        <div class="absolute right-3 top-3 opacity-10 text-5xl">🏬</div>
+        <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">รายการสินค้า & สาขาที่มีสต็อก</p>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sku">35</span>
+          <span class="text-sm font-medium text-slate-500">SKUs</span>
+          <span class="mx-1 text-slate-300">|</span>
+          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sites">38</span>
+          <span class="text-sm font-medium text-slate-500">สาขา</span>
+        </div>
+        <div class="mt-3 text-xs text-slate-500 flex items-center gap-2">
+          <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-medium">DC 1</span>
+          <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-medium">Mega Home 25</span>
+          <span class="px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">HomePro 12</span>
+        </div>
+      </div>
+
+      <!-- Health / Negative Stock Alert -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-red-200 bg-gradient-to-br from-red-50/50 to-white relative overflow-hidden">
+        <div class="absolute right-3 top-3 opacity-15 text-5xl">⚠️</div>
+        <p class="text-xs font-semibold uppercase text-red-600 tracking-wider">แจ้งเตือนผู้บริหาร (สต็อกติดลบ)</p>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-red-600" id="kpi-neg-count">3</span>
+          <span class="text-sm font-medium text-red-500">รายการติดลบ</span>
+        </div>
+        <div class="mt-3 text-xs text-red-700 flex items-center justify-between">
+          <span>กระทบมูลค่า:</span>
+          <span class="font-bold">-฿3,109.10</span>
+          <button onclick="filterNegativeOnly()" class="underline text-red-800 font-bold hover:text-red-950">คลิกตรวจสอบ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Charts Row -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Chart 1: Breakdown by Product Type -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">สัดส่วนมูลค่าสต็อกตามประเภท</h3>
+            <p class="text-xs text-slate-500">แยกตามหมวดหมู่สายยางพญานาค</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium">On-Hand</span>
+        </div>
+        <div class="relative h-64 flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: 4-Month Inventory Trend -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">แนวโน้มมูลค่าสต็อก 4 เดือนย้อนหลัง</h3>
+            <p class="text-xs text-slate-500">มิ.ย. - ก.ย. 2026 (บาท)</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">Clearance -27.5%</span>
+        </div>
+        <div class="relative h-64">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Top Stock Branches -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">Top 7 สาขาที่มีสต็อกสูงสุด</h3>
+            <p class="text-xs text-slate-500">สาขาที่เงินทุนจมมากที่สุด (บาท)</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full font-medium">Top Capital</span>
+        </div>
+        <div class="relative h-64">
+          <canvas id="branchChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Section: Top 10 SKUs by Stock Value (10 อันดับสินค้ามูลค่าสต็อกสูงสุด เรียงจากมากไปน้อย) -->
+    <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-xs font-bold rounded-full uppercase tracking-wider">Pareto 70/30 Analysis</span>
+            <h2 class="text-xl font-bold text-slate-900">🏆 10 อันดับสินค้าที่มีมูลค่าสต็อกสูงสุด (จากมากไปหาน้อย)</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">10 รายการนี้ครองมูลค่ารวม <strong>฿700,655.17 (68.2%)</strong> ของสต็อกทั้งหมด ควรเน้นทำแคมเปญระบายสต็อกในกลุ่มนี้เป็นอันดับแรก</p>
+        </div>
+        <span class="text-xs font-semibold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg">
+          มูลค่ารวม Top 10: ฿700,655 (68.2%)
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border border-slate-200 rounded-xl overflow-hidden">
+          <thead class="bg-slate-100 text-slate-700 text-xs font-semibold uppercase">
+            <tr>
+              <th class="py-3 px-4 text-center w-12">อันดับ</th>
+              <th class="py-3 px-4">ARTNO (รหัสสินค้า)</th>
+              <th class="py-3 px-4">ARTDESC (ชื่อรายการสินค้า)</th>
+              <th class="py-3 px-4 text-right">จำนวนคงเหลือ (ม้วน)</th>
+              <th class="py-3 px-4 text-right bg-amber-50/60 text-amber-900 font-bold">มูลค่าคงเหลือ (บาท)</th>
+              <th class="py-3 px-4 text-center">สัดส่วนในสต็อกรวม (%)</th>
+              <th class="py-3 px-4 text-center">ระดับความสำคัญ</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-amber-50/30 bg-amber-50/10 transition">
+              <td class="py-3 px-4 text-center font-bold text-amber-600">🥇 1</td>
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">1132561</td>
+              <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 1" หนา 1.5 มม. 100 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">119.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿194,618.02</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">18.94%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูงสุด</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-500">🥈 2</td>
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">1132492</td>
+              <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 3/4" หนา 1.5 มม. 100 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">98.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿125,514.82</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">12.21%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูง</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-amber-700">🥉 3</td>
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">1132470</td>
+              <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 2" หนา 1.5 มม. 30 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">60.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿85,936.69</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">8.36%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-orange-100 text-orange-800 text-xs font-semibold rounded">ระบายด่วน</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">4</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1132522</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 5/8" หนา 1.5 มม. 100 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">69.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿65,662.10</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">6.39%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดมาตรฐาน</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">5</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145498</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 1" 20M. พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">4,052.87</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿61,909.65</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">6.03%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">ปริมาณมากสุด</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">6</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145588</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 2" หนา 0.6 มม. แบน 30 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">2,224.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿39,253.92</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.82%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">เกษตร/สูบน้ำ</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">7</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145637</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 1 1/2" หนา 2 มม. x 50 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">1,385.31</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿35,121.98</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.42%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">งานช่าง/เกษตร</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">8</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1132493</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 1/2" 20M. พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">277.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿34,387.79</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.35%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดใช้ในบ้าน</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">9</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1155903</td>
+              <td class="py-3 px-4 text-slate-800">สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8" x 20M</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">109.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿29,929.57</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">2.91%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded">เกรดพรีเมียม</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">10</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1132574</td>
+              <td class="py-3 px-4 text-slate-800">สายยางเขียว 1" 20M. พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">121.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿28,320.63</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">2.76%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">เขียวขายดี</span></td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-slate-100 font-bold border-t-2 border-slate-300">
+            <tr>
+              <td colspan="3" class="py-3.5 px-4 text-right text-slate-900">รวม 10 อันดับสูงสุด (Top 10 Subtotal):</td>
+              <td class="py-3.5 px-4 text-right font-mono text-indigo-900">8,506.18 ม้วน</td>
+              <td class="py-3.5 px-4 text-right font-mono text-emerald-800 bg-amber-100/60 text-base">฿700,655.17</td>
+              <td class="py-3.5 px-4 text-center font-mono text-indigo-900 font-extrabold">68.18%</td>
+              <td class="py-3.5 px-4 text-center text-xs text-slate-500">ครอง 68.2% ของสต็อก</td>
+            </tr>
+            <tr class="text-xs text-slate-600 bg-slate-50">
+              <td colspan="3" class="py-2.5 px-4 text-right">รายการอื่นๆ ที่เหลือ 25 SKUs:</td>
+              <td class="py-2.5 px-4 text-right font-mono">12,219.73 ม้วน</td>
+              <td class="py-2.5 px-4 text-right font-mono font-semibold">฿326,960.85</td>
+              <td class="py-2.5 px-4 text-center font-mono">31.82%</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section: Historical Sales & Q4 Clearance Plan (ย้อนหลัง & เป้าหมายก่อน 31 ธ.ค. 2026) -->
+    <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-indigo-100 space-y-6">
+      <div class="border-b border-slate-200 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-full uppercase tracking-wider">Strategic Planning</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">📈 สรุปยอดขายย้อนหลัง & แผนเป้าหมายก่อน 31 ธันวาคม 2026</h2>
+          <p class="text-xs sm:text-sm text-slate-500">วิเคราะห์อัตราการระบายสต็อก (Sell-Out Rate) และคำนวณยอดที่ต้องทำต่อเดือนเพื่อพิชิตเป้าหมายสิ้นปี</p>
+        </div>
+        <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-amber-800 text-xs font-semibold">
+          ⏳ ข้อมูล ณ 16 ต.ค. 2026 | เหลือเวลาอีกประมาณ 2.5 เดือน (76 วัน) ถึง 31 ธ.ค. 2026
+        </div>
+      </div>
+
+      <!-- 1. Historical Sales Table -->
+      <div class="space-y-3">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <span>🗓️</span> ยอดขาย/ระบายสต็อกย้อนหลังในแต่ละเดือน (Sell-Out Tracking)
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left border border-slate-200 rounded-xl overflow-hidden">
+            <thead class="bg-slate-100 text-slate-700 text-xs font-semibold uppercase">
+              <tr>
+                <th class="py-3 px-4">ช่วงเวลา (Period)</th>
+                <th class="py-3 px-4 text-right">สต็อกต้นงวด (บาท)</th>
+                <th class="py-3 px-4 text-right">สต็อกปลายงวด (บาท)</th>
+                <th class="py-3 px-4 text-right bg-emerald-50 text-emerald-900">ยอดขาย/ระบายออก (บาท)</th>
+                <th class="py-3 px-4 text-right bg-emerald-50 text-emerald-900">จำนวนขายได้ (ม้วน)</th>
+                <th class="py-3 px-4 text-center">% การลดลง</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-medium text-slate-900">8 มิ.ย. 26 - 16 ก.ค. 26 (~เดือน มิ.ย.)</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,417,737.42</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,238,958.92</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">฿178,778.50</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">4,477.00</td>
+                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">-12.61%</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-medium text-slate-900">16 ก.ค. 26 - 17 ส.ค. 26 (~เดือน ก.ค.)</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,238,958.92</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,119,305.93</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">฿119,652.99</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">1,951.00</td>
+                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">-9.66%</span></td>
+              </tr>
+              <tr class="hover:bg-slate-50">
+                <td class="py-3 px-4 font-medium text-slate-900">17 ส.ค. 26 - 15 ก.ย. 26 (~เดือน ส.ค.)</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,119,305.93</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,027,616.02</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">฿91,689.91</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">1,451.00</td>
+                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">-8.19%</span></td>
+              </tr>
+            </tbody>
+            <tfoot class="bg-slate-100/90 font-bold border-t border-slate-200">
+              <tr>
+                <td class="py-3 px-4 text-slate-900">รวมระบายสต็อก 3 เดือนย้อนหลัง:</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-500">-</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-500">-</td>
+                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">฿390,121.40</td>
+                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">7,879.00</td>
+                <td class="py-3 px-4 text-center text-emerald-700">-27.52%</td>
+              </tr>
+              <tr class="text-xs font-semibold text-slate-600 bg-slate-50">
+                <td class="py-2.5 px-4 text-blue-900">ค่าเฉลี่ยต่อเดือนที่ทำได้จริง (Run-rate):</td>
+                <td colspan="2"></td>
+                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย ฿130,040 / เดือน</td>
+                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย 2,626 ม้วน / เดือน</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Target Clearance Calculator for Q4 (เป้าหมายก่อน 31 ธ.ค. 2026) -->
+      <div class="bg-gradient-to-br from-indigo-50/80 to-blue-50/50 border border-indigo-200/80 rounded-2xl p-6">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-2">
+          <span>🎯</span> คำนวณเป้าหมายยอดขายที่ต้องทำต่อเดือนก่อน 31 ธันวาคม 2026
+        </h3>
+        <p class="text-xs text-slate-600 mb-5">
+          สต็อกปัจจุบันคงเหลือ <strong>฿1,027,616.02 (20,726 ม้วน)</strong> เลือกระดับเป้าหมายสต็อกสิ้นปีเพื่อดูยอดขายที่ฝ่ายขายและ PC ต้องทำต่อเดือน:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Scenario A: 100% Zero Stock -->
+          <div class="bg-white rounded-xl p-5 border-2 border-indigo-500 shadow-sm relative">
+            <span class="absolute -top-3 right-4 px-2.5 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full uppercase">เป้าหมายสูงสุด (Clearance 100%)</span>
+            <h4 class="font-bold text-slate-900 text-sm">แผนที่ 1: เคลียร์สต็อกหมดเกลี้ยง (0 บาท)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกทั้งสิ้น ฿1,027,616</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+              <div class="flex justify-between items-baseline">
+                <span class="text-xs text-slate-600">นับ 3.5 เดือน (ก.ย.-ธ.ค.):</span>
+                <span class="text-base font-extrabold text-indigo-700 font-mono">฿293,605 /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500">
+                <span>จำนวนม้วนเฉลี่ย:</span>
+                <span class="font-mono font-semibold text-slate-700">5,922 ม้วน /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
+                <span>หากนับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
+                <span class="font-mono font-bold text-slate-900">฿342,539 /ด.</span>
+              </div>
+            </div>
+            <div class="mt-3 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg font-medium">
+              ⚡ ต้องเร่งยอดขึ้น <strong>2.3 เท่า</strong> ของค่าเฉลี่ยปกติ (จัด 1 แถม 1 ทันที)
+            </div>
+          </div>
+
+          <!-- Scenario B: 80% Clearance (Safety Stock 20%) -->
+          <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-400 transition">
+            <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full uppercase">แผนแนะนำ (Realistic 80%)</span>
+            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 2: เหลือ Safety Stock 20% (฿200k)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกออก ฿827,616</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+              <div class="flex justify-between items-baseline">
+                <span class="text-xs text-slate-600">นับ 3.5 เดือน (ก.ย.-ธ.ค.):</span>
+                <span class="text-base font-extrabold text-blue-700 font-mono">฿236,462 /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500">
+                <span>จำนวนม้วนเฉลี่ย:</span>
+                <span class="font-mono font-semibold text-slate-700">4,767 ม้วน /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
+                <span>หากนับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
+                <span class="font-mono font-bold text-slate-900">฿275,872 /ด.</span>
+              </div>
+            </div>
+            <div class="mt-3 text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg font-medium">
+              🎯 เหมาะสมกับช่วงไฮซีซั่น Q4 และยังมีสินค้าหมุนเวียนต่อเนื่อง
+            </div>
+          </div>
+
+          <!-- Scenario C: Organic Run-rate (รักษาอัตราปัจจุบัน) -->
+          <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-slate-300 transition">
+            <span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full uppercase">อัตราปัจจุบัน (Baseline)</span>
+            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 3: ขายตามอัตราเดิม (฿130k/ด.)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">ขายได้ประมาณ ฿455,142 ใน 3.5 เดือน</p>
+            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
+              <div class="flex justify-between items-baseline">
+                <span class="text-xs text-slate-600">ยอดขายทำได้:</span>
+                <span class="text-base font-extrabold text-slate-800 font-mono">฿130,040 /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500">
+                <span>จำนวนม้วนเฉลี่ย:</span>
+                <span class="font-mono font-semibold text-slate-700">2,626 ม้วน /ด.</span>
+              </div>
+              <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
+                <span>สต็อกที่จะคงเหลือ ณ 31 ธ.ค.:</span>
+                <span class="font-mono font-bold text-amber-700">฿572,474</span>
+              </div>
+            </div>
+            <div class="mt-3 text-[11px] text-slate-600 bg-slate-100 p-2 rounded-lg font-medium">
+              📌 สต็อกจะยังค้างเกิน 50% ต้องเพิ่มแคมเปญกระตุ้น PC
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Executive Strategic Insights (นำเสนอผู้บริหาร) -->
+    <section class="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-md">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-xl">💡</span>
+        <h2 class="text-lg font-bold">ข้อค้นพบสำคัญ & ข้อเสนอแนะเชิงกลยุทธ์สำหรับผู้บริหาร (Executive Insights)</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-200">
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+          <h4 class="font-semibold text-amber-400 mb-1">1. ประสิทธิภาพการระบายสต็อก (Positive Trend)</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            มูลค่าสต็อกลดลงต่อเนื่องจาก ฿1,417,737.42 (มิ.ย.) เหลือ ฿1,027,616.02 (ก.ย.) หรือลดลง <strong>27.52% (฿390,121.40)</strong> แสดงถึงอัตราการขายออกที่ดีและการควบคุม Re-order point ได้อย่างรัดกุม ไม่เกิดปัญหาสต็อกบวม
+          </p>
+        </div>
+
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+          <h4 class="font-semibold text-amber-400 mb-1">2. สายยางใส & สายยางเขียว ครองส่วนแบ่ง 76%</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            สต็อกกว่า <strong>76.39%</strong> กระจุกตัวอยู่ที่ 2 กลุ่มหลัก คือสายยางใส (฿589,842.27) และสายยางเขียว (฿195,123.63) โดยเฉพาะขนาด <strong>1" และ 1/2" ความยาว 10M-20M</strong> ซึ่งเป็น Hero SKU ควรเน้นการเติมสินค้าให้พอดีไม่ให้ขาดตลาด
+          </p>
+        </div>
+
+        <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+          <h4 class="font-semibold text-red-400 mb-1">3. ประเด็นเร่งด่วน: สต็อกติดลบ 3 รายการ</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            พบสาขาที่สต็อกติดลบในระบบ: <strong>เมกาโฮม รังสิต (สายยางใส 1" 20M: -45.13 ม้วน), เมกาโฮม รัตนาธิเบศร์ (-3 ม้วน), เมกาโฮม เวียงสระ (สายยางใส 1/2" 100M: -294 ม้วน)</strong> ต้องสั่ง Audit ตรวจนับสต็อกจริงและแก้ไขเอกสารรับเข้า/ตัดจ่ายทันที
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters & Interactive Controls -->
+    <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 space-y-4 no-print">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="font-bold text-slate-900 text-lg">แยกรายการและค้นหาข้อมูลสินค้าคงเหลือ</h3>
+          <p class="text-xs text-slate-500">กรองข้อมูลแบบเรียลไทม์เพื่อเจาะลึกเฉพาะหมวดหมู่ ขนาด หรือสาขาที่ต้องการ</p>
+        </div>
+        <button onclick="resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold underline">
+          ล้างตัวกรองทั้งหมด (Reset)
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Search Query -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหา (รหัสสินค้า / ชื่อสินค้า / สาขา)</label>
+          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="พิมพ์ค้นหา..." class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <!-- Product Group Filter -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">กลุ่มประเภทสินค้า</label>
+          <select id="groupFilter" onchange="applyFilters()" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <option value="ALL">ทุกกลุ่มสินค้า (All Categories)</option>
+            <option value="สายยางใส">สายยางใส (Clear Hose)</option>
+            <option value="สายยางเขียว">สายยางเขียว (Green Hose)</option>
+            <option value="สายยางเด้ง">สายยางเด้ง ฟ้ามัน (Blue Elastic Hose)</option>
+            <option value="สายยางม้วน">สายยางม้วน PVC</option>
+          </select>
+        </div>
+
+        <!-- Channel Filter -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">ช่องทาง / คลังสาขา</label>
+          <select id="channelFilter" onchange="applyFilters()" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <option value="ALL">ทุกช่องทาง (All Channels)</option>
+            <option value="DC">คลังศูนย์กลาง (DC วังน้อย)</option>
+            <option value="MEGA">เมกาโฮม (Mega Home - M)</option>
+            <option value="HOMEPRO">โฮมโปร (HomePro - S)</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">สถานะสต็อก</label>
+          <select id="statusFilter" onchange="applyFilters()" class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+            <option value="ALL">ทั้งหมด (All Status)</option>
+            <option value="NORMAL">ปกติ (On Hand > 0)</option>
+            <option value="NEGATIVE">สต็อกติดลบ (Negative On Hand)</option>
+            <option value="ZERO">สต็อกเป็น 0 (Out of Stock)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data Table Section -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div class="flex items-center gap-2">
+          <h3 class="font-bold text-slate-900 text-base">ตารางรายการสินค้าคงเหลือ (Stock Breakdown Table)</h3>
+          <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 font-semibold rounded-full" id="row-count-badge">แสดง 0 รายการ</span>
+        </div>
+        <div class="text-xs text-slate-500 font-medium">
+          * แสดงคอลัมน์: รหัสสินค้า (ARTNO), ชื่อรายการสินค้าเต็ม (ARTDESC), ชื่อสาขาเต็ม (SITENAME), จำนวนคงเหลือ (ONHANDQTY), มูลค่าราคาเต็ม (ONHANDVALUE)
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm" id="stockTable">
+          <thead class="bg-slate-100/80 text-slate-700 uppercase font-semibold text-xs tracking-wider border-b border-slate-200">
+            <tr>
+              <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('artno')">รหัสสินค้า (ARTNO) ⬍</th>
+              <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('artdesc')">ชื่อรายการสินค้าเต็ม (ARTDESC) ⬍</th>
+              <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('sitename')">ชื่อสาขาเต็ม (SITENAME) ⬍</th>
+              <th scope="col" class="py-3.5 px-4 text-right cursor-pointer hover:bg-slate-200/70" onclick="sortTable('onhandqty')">จำนวนคงเหลือ (หน่วย) ⬍</th>
+              <th scope="col" class="py-3.5 px-4 text-right cursor-pointer hover:bg-slate-200/70 bg-amber-50/50 text-slate-900" onclick="sortTable('onhandvalue')">มูลค่าราคาเต็ม (ONHANDVALUE) ⬍</th>
+              <th scope="col" class="py-3.5 px-4 text-center">สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic rows will be inserted here -->
+          </tbody>
+          <tfoot class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+            <tr>
+              <td colspan="3" class="py-3.5 px-4 text-right">รวมตามรายการที่เลือก (Subtotal):</td>
+              <td class="py-3.5 px-4 text-right font-mono text-indigo-900" id="table-subtotal-qty">0</td>
+              <td class="py-3.5 px-4 text-right font-mono text-emerald-800 bg-amber-100/60" id="table-subtotal-val">฿0.00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer Note -->
+    <footer class="text-center text-xs text-slate-400 py-4 border-t border-slate-200">
+      ระบบจัดการวิเคราะห์ข้อมูลสต็อกสินค้าพญานาค • จัดทำเพื่อการนำเสนอผู้บริหารระดับสูง • ข้อมูล ณ วันที่ 16 ตุลาคม 2026
+    </footer>
+
+  </main>
+
+  <!-- Embedded Raw Stock Data & Interactive Script -->
+  <script>
+    // Complete structured raw data from Stock PTI 16_9_2026.xls
+    const rawStockData = [
+      // 1132398.0 สายยางใส1/2" 10M.พญานาค
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:62, onhandvalue:3855.78},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:14, onhandvalue:870.66},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:1, onhandvalue:55.22},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:13, onhandvalue:808.47},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:4, onhandvalue:248.65},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:15, onhandvalue:829.60},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:23, onhandvalue:1364.51},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M009", sitename:"เมกาโฮม-หาดใหญ่", onhandqty:20, onhandvalue:1243.80},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:13, onhandvalue:767.40},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:3, onhandvalue:172.93},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:6, onhandvalue:358.31},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:2, onhandvalue:122.44},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:10, onhandvalue:612.98},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:9, onhandvalue:490.55},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:10, onhandvalue:530.66},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:1, onhandvalue:54.42},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:10, onhandvalue:569.18},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:18, onhandvalue:1119.42},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:1, onhandvalue:60.68},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:12, onhandvalue:706.38},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:1, onhandvalue:59.58},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:9, onhandvalue:538.60},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:9, onhandvalue:559.71},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S027", sitename:"ขอนแก่น", onhandqty:2, onhandvalue:120.67},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:9, onhandvalue:545.78},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:14, onhandvalue:870.66},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:11, onhandvalue:684.09},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:13, onhandvalue:808.47},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:8, onhandvalue:437.76},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S108", sitename:"ภูเก็ต (เจ้าฟ้า)", onhandqty:1, onhandvalue:56.23},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:5, onhandvalue:290.77},
+      {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"S115", sitename:"พุทธมณฑล สาย4", onhandqty:6, onhandvalue:373.14},
+
+      // 1132399.0 สายยางใส1"10M.พญานาค
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:25, onhandvalue:3839.50},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:8, onhandvalue:1225.62},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:5, onhandvalue:752.57},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:1, onhandvalue:155.49},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:4, onhandvalue:594.66},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:1, onhandvalue:150.86},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:2, onhandvalue:299.72},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M012", sitename:"เมกาโฮม-เชียงราย", onhandqty:1, onhandvalue:146.30},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:2, onhandvalue:307.66},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:21, onhandvalue:3174.87},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:9, onhandvalue:1350.49},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M018", sitename:"เมกาโฮม-รัตนาธิเบศร์", onhandqty:-2, onhandvalue:-310.10},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:11, onhandvalue:1658.09},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:6, onhandvalue:909.32},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:4, onhandvalue:619.82},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:16, onhandvalue:2425.19},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S020", sitename:"หาดใหญ่", onhandqty:6, onhandvalue:932.94},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S027", sitename:"ขอนแก่น", onhandqty:5, onhandvalue:767.53},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S041", sitename:"นครศรีธรรมราช", onhandqty:8, onhandvalue:1243.92},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:1, onhandvalue:155.49},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S050", sitename:"หาดใหญ่(กาญจนวนิช)", onhandqty:8, onhandvalue:1242.85},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S056", sitename:"ชุมพร", onhandqty:10, onhandvalue:1554.90},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:6, onhandvalue:932.94},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:6, onhandvalue:893.91},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:3, onhandvalue:463.76},
+      {artno:"1132399", artdesc:"สายยางใส1\" 10M.พญานาค", siteno:"S115", sitename:"พุทธมณฑล สาย4", onhandqty:2, onhandvalue:310.98},
+
+      // 1132470.0 สายยางใส2" หนา 1.5 มม. 30 เมตรพญานาค
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:9, onhandvalue:13252.90},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:10, onhandvalue:12621.46},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:1, onhandvalue:1566.71},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:7, onhandvalue:10643.11},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:20, onhandvalue:30222.64},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:9, onhandvalue:11052.00},
+      {artno:"1132470", artdesc:"สายยางใส2\" หนา 1.5 มม. 30M.พญานาค", siteno:"S023", sitename:"หัวหิน", onhandqty:4, onhandvalue:6577.87},
+
+      // 1132473.0 สายยางเขียว5/8"10M.พญานาค
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:1, onhandvalue:80.79},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:15, onhandvalue:1242.98},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:14, onhandvalue:1181.38},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:10, onhandvalue:821.48},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:5, onhandvalue:393.72},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:1, onhandvalue:84.67},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:20, onhandvalue:1754.55},
+      {artno:"1132473", artdesc:"สายยางเขียว5/8\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:22, onhandvalue:1790.03},
+
+      // 1132492.0 สายยางใส3/4" หนา 1.5 มม.100 เมตรพญานาค
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:6, onhandvalue:7996.52},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:5, onhandvalue:6021.72},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:6, onhandvalue:6444.45},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:7, onhandvalue:7608.34},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M009", sitename:"เมกาโฮม-หาดใหญ่", onhandqty:3, onhandvalue:4030.32},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:6, onhandvalue:7513.04},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:6, onhandvalue:6320.13},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:4, onhandvalue:5373.76},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:6, onhandvalue:8060.64},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:15, onhandvalue:19027.12},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:6, onhandvalue:7441.94},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:6, onhandvalue:7369.68},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:9, onhandvalue:12090.96},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:6, onhandvalue:8049.95},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:6, onhandvalue:6284.13},
+      {artno:"1132492", artdesc:"สายยางใส3/4\" หนา 1.5 มม. 100M.พญานาค", siteno:"S108", sitename:"ภูเก็ต (เจ้าฟ้า)", onhandqty:5, onhandvalue:5882.12},
+
+      // 1132493.0 สายยางใส1/2"20M.พญานาค
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:11, onhandvalue:1368.40},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:6, onhandvalue:740.90},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:2, onhandvalue:244.47},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:19, onhandvalue:2331.59},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:19, onhandvalue:2298.16},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:6, onhandvalue:728.78},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:10, onhandvalue:1188.20},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:14, onhandvalue:1684.34},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:7, onhandvalue:817.91},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:5, onhandvalue:620.35},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:6, onhandvalue:686.54},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:8, onhandvalue:970.99},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M018", sitename:"เมกาโฮม-รัตนาธิเบศร์", onhandqty:-1, onhandvalue:-123.40},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:8, onhandvalue:983.21},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:3, onhandvalue:343.88},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:6, onhandvalue:609.46},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:11, onhandvalue:1310.00},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:11, onhandvalue:1290.19},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:10, onhandvalue:1240.44},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:5, onhandvalue:619.07},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:13, onhandvalue:1606.68},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S027", sitename:"ขอนแก่น", onhandqty:6, onhandvalue:720.68},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:11, onhandvalue:1343.48},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:30, onhandvalue:3731.70},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:8, onhandvalue:995.07},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:8, onhandvalue:933.96},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S083", sitename:"พระราม 3", onhandqty:1, onhandvalue:119.65},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:15, onhandvalue:1803.54},
+      {artno:"1132493", artdesc:"สายยางใส1/2\" 20M.พญานาค", siteno:"S115", sitename:"พุทธมณฑล สาย4", onhandqty:9, onhandvalue:1119.60},
+
+      // 1132505.0 สายยางใส3/4"20M.พญานาค
+      {artno:"1132505", artdesc:"สายยางใส3/4\" 20M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:5, onhandvalue:1240.28},
+      {artno:"1132505", artdesc:"สายยางใส3/4\" 20M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:11, onhandvalue:2736.69},
+
+      // 1132522.0 สายยางใส5/8" หนา 1.5 มม.100 เมตรพญานาค
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:7, onhandvalue:6582.48},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:6, onhandvalue:5042.19},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:12, onhandvalue:11946.93},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:1, onhandvalue:969.76},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:3, onhandvalue:2793.32},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M009", sitename:"เมกาโฮม-หาดใหญ่", onhandqty:5, onhandvalue:4844.68},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:3, onhandvalue:2552.59},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:6, onhandvalue:5748.13},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:12, onhandvalue:11370.17},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:6, onhandvalue:5751.21},
+      {artno:"1132522", artdesc:"สายยางใส5/8\" หนา 1.5 มม. 100M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:8, onhandvalue:8060.64},
+
+      // 1132525.0 สายยางเขียว1"10M.พญานาค
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:2, onhandvalue:236.05},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:21, onhandvalue:2680.26},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:3, onhandvalue:398.94},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:12, onhandvalue:1557.29},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:17, onhandvalue:2213.32},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:9, onhandvalue:1062.22},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:2, onhandvalue:244.94},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:6, onhandvalue:738.15},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:12, onhandvalue:1561.61},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:10, onhandvalue:1329.80},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:6, onhandvalue:694.58},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:9, onhandvalue:1161.85},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:11, onhandvalue:1462.78},
+      {artno:"1132525", artdesc:"สายยางเขียว1\" 10M.พญานาค", siteno:"S113", sitename:"แม่สาย", onhandqty:11, onhandvalue:1365.82},
+
+      // 1132551.0 สายยางใส1 1/4"  หนา 1.5 มม.50 เมตรพญานาค
+      {artno:"1132551", artdesc:"สายยางใส1 1/4\" หนา 1.5 มม. 50M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:3, onhandvalue:2990.17},
+      {artno:"1132551", artdesc:"สายยางใส1 1/4\" หนา 1.5 มม. 50M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:8, onhandvalue:7345.67},
+      {artno:"1132551", artdesc:"สายยางใส1 1/4\" หนา 1.5 มม. 50M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:7, onhandvalue:7053.06},
+      {artno:"1132551", artdesc:"สายยางใส1 1/4\" หนา 1.5 มม. 50M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:7, onhandvalue:6951.69},
+
+      // 1132552.0 สายยางเขียว3/4"10M.พญานาค
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:3, onhandvalue:312.81},
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:13, onhandvalue:1379.48},
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:13, onhandvalue:1307.72},
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:12, onhandvalue:1226.32},
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:13, onhandvalue:1435.59},
+      {artno:"1132552", artdesc:"สายยางเขียว3/4\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:23, onhandvalue:2388.68},
+
+      // 1132553.0 สายยางเขียว1/2"10M.พญานาค
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:2, onhandvalue:127.64},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:8, onhandvalue:493.30},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:2, onhandvalue:128.77},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:13, onhandvalue:818.35},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:22, onhandvalue:1349.43},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:8, onhandvalue:471.43},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:17, onhandvalue:1087.47},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:15, onhandvalue:997.20},
+      {artno:"1132553", artdesc:"สายยางเขียว1/2\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:6, onhandvalue:350.19},
+
+      // 1132554.0 สายยางเขียว5/8" หนา1.7 มม.100ม.พญานาค
+      {artno:"1132554", artdesc:"สายยางเขียว5/8\" หนา1.7 มม. 100M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:15, onhandvalue:12324.82},
+      {artno:"1132554", artdesc:"สายยางเขียว5/8\" หนา1.7 มม. 100M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:4, onhandvalue:3178.82},
+      {artno:"1132554", artdesc:"สายยางเขียว5/8\" หนา1.7 มม. 100M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:8, onhandvalue:6573.81},
+      {artno:"1132554", artdesc:"สายยางเขียว5/8\" หนา1.7 มม. 100M.พญานาค", siteno:"S113", sitename:"แม่สาย", onhandqty:7, onhandvalue:5412.34},
+
+      // 1132561.0 สายยางใส1"  หนา 1.5 มม.100 เมตรพญานาค
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:25, onhandvalue:41982.25},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:6, onhandvalue:9622.37},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:7, onhandvalue:10525.59},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:1, onhandvalue:1508.65},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:1, onhandvalue:1320.62},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:3, onhandvalue:4322.32},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:2, onhandvalue:2741.49},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:4, onhandvalue:6345.76},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:6, onhandvalue:9102.54},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:15, onhandvalue:25189.35},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:5, onhandvalue:7945.29},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:5, onhandvalue:7126.52},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:5, onhandvalue:7333.72},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:8, onhandvalue:11468.78},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:5, onhandvalue:8396.45},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:6, onhandvalue:10075.74},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"S050", sitename:"หาดใหญ่(กาญจนวนิช)", onhandqty:0, onhandvalue:0.00},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"S056", sitename:"ชุมพร", onhandqty:4, onhandvalue:6717.16},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:8, onhandvalue:10648.67},
+      {artno:"1132561", artdesc:"สายยางใส1\" หนา 1.5 มม. 100M.พญานาค", siteno:"S113", sitename:"แม่สาย", onhandqty:6, onhandvalue:8244.75},
+
+      // 1132571.0 สายยางใส3/4"10M.พญานาค
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:4, onhandvalue:480.46},
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:1, onhandvalue:103.58},
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:4, onhandvalue:480.85},
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:11, onhandvalue:1297.72},
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:20, onhandvalue:2382.98},
+      {artno:"1132571", artdesc:"สายยางใส3/4\" 10M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:9, onhandvalue:1026.32},
+
+      // 1132572.0 สายยางเขียว3/4" หนา1.8 มม.100 ม.พญานาค
+      {artno:"1132572", artdesc:"สายยางเขียว3/4\" หนา1.8 มม. 100M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:6, onhandvalue:5803.57},
+      {artno:"1132572", artdesc:"สายยางเขียว3/4\" หนา1.8 มม. 100M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:1, onhandvalue:842.29},
+
+      // 1132573.0 สายยางเขียว5/8"20M.พญานาค
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:31, onhandvalue:5231.17},
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:19, onhandvalue:3183.73},
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:9, onhandvalue:1593.47},
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:11, onhandvalue:1895.52},
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:17, onhandvalue:2976.19},
+      {artno:"1132573", artdesc:"สายยางเขียว5/8\" 20M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:0, onhandvalue:0.00},
+
+      // 1132574.0 สายยางเขียว1"20M.พญานาค
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:5, onhandvalue:1098.38},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:8, onhandvalue:2121.88},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:16, onhandvalue:4254.62},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:17, onhandvalue:3857.81},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:14, onhandvalue:3205.09},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:18, onhandvalue:4051.62},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:17, onhandvalue:3651.01},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:10, onhandvalue:2541.25},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:5, onhandvalue:1081.52},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:9, onhandvalue:2018.11},
+      {artno:"1132574", artdesc:"สายยางเขียว1\" 20M.พญานาค", siteno:"S097", sitename:"ศูนย์การค้าแฟชั่นไอส์แลนด์", onhandqty:2, onhandvalue:439.34},
+
+      // 1132837.0 สายยางใส 3" 30M.พญานาค
+      {artno:"1132837", artdesc:"สายยางใส 3\" 30M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:2, onhandvalue:1663.11},
+      {artno:"1132837", artdesc:"สายยางใส 3\" 30M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:7, onhandvalue:5847.76},
+
+      // 1132849.0 สายยางเขียว3/4"20M.พญานาค
+      {artno:"1132849", artdesc:"สายยางเขียว3/4\" 20M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:8, onhandvalue:1703.35},
+      {artno:"1132849", artdesc:"สายยางเขียว3/4\" 20M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:8, onhandvalue:1688.00},
+      {artno:"1132849", artdesc:"สายยางเขียว3/4\" 20M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:10, onhandvalue:2082.67},
+      {artno:"1132849", artdesc:"สายยางเขียว3/4\" 20M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:3, onhandvalue:650.53},
+
+      // 1132972.0 สายยางใส5/8"20M.พญานาค
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:16, onhandvalue:2581.67},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:7, onhandvalue:1217.14},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:9, onhandvalue:1467.05},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:0, onhandvalue:0.00},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:7, onhandvalue:1176.15},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:21, onhandvalue:3126.76},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:12, onhandvalue:2053.80},
+      {artno:"1132972", artdesc:"สายยางใส5/8\" 20M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:1, onhandvalue:165.43},
+
+      // 1133007.0 สายยางใส5/8"10M.พญานาค
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:5, onhandvalue:429.21},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:3, onhandvalue:271.82},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:8, onhandvalue:729.90},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:2, onhandvalue:186.12},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:12, onhandvalue:1053.32},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:2, onhandvalue:168.89},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:14, onhandvalue:1188.84},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:10, onhandvalue:908.05},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:24, onhandvalue:2168.23},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:17, onhandvalue:1524.37},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:2, onhandvalue:171.42},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:17, onhandvalue:1557.99},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:7, onhandvalue:633.67},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:1, onhandvalue:92.21},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:11, onhandvalue:1000.40},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"S027", sitename:"ขอนแก่น", onhandqty:8, onhandvalue:726.69},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:8, onhandvalue:734.68},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"S108", sitename:"ภูเก็ต (เจ้าฟ้า)", onhandqty:6, onhandvalue:554.85},
+      {artno:"1133007", artdesc:"สายยางใส5/8\" 10M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:2, onhandvalue:183.22},
+
+      // 1133114.0 สายยางม้วน PVC เขียว พญานาค 1" 100M CL
+      {artno:"1133114", artdesc:"สายยางม้วน PVC เขียว พญานาค 1\" 100M CL", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:6, onhandvalue:7098.22},
+      {artno:"1133114", artdesc:"สายยางม้วน PVC เขียว พญานาค 1\" 100M CL", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:12, onhandvalue:14227.38},
+
+      // 1133267.0 สายยางเขียว1/2"20M.พญานาค
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:5, onhandvalue:660.19},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:6, onhandvalue:698.09},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:13, onhandvalue:1701.89},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:7, onhandvalue:899.21},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:9, onhandvalue:1172.94},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:14, onhandvalue:1861.72},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:12, onhandvalue:1504.72},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:11, onhandvalue:1409.54},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:1, onhandvalue:132.04},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S012", sitename:"เชียงใหม่", onhandqty:1, onhandvalue:132.04},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:4, onhandvalue:477.78},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S043", sitename:"ร้อยเอ็ด", onhandqty:2, onhandvalue:264.08},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:11, onhandvalue:1391.06},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:11, onhandvalue:1414.51},
+      {artno:"1133267", artdesc:"สายยางเขียว1/2\" 20M.พญานาค", siteno:"S113", sitename:"แม่สาย", onhandqty:10, onhandvalue:1157.62},
+
+      // 1145498.0 สายยางใส1"20M.พญานาค
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:-45.13, onhandvalue:-701.32},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:160, onhandvalue:2474.75},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:240, onhandvalue:3646.70},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:195, onhandvalue:3025.01},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:5, onhandvalue:76.91},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:15, onhandvalue:232.71},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:116, onhandvalue:1754.35},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:400, onhandvalue:5862.67},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:140, onhandvalue:2097.36},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:80, onhandvalue:1203.57},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:20, onhandvalue:309.75},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:60, onhandvalue:895.20},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:40, onhandvalue:617.60},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:120, onhandvalue:1816.05},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:280, onhandvalue:4278.25},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M018", sitename:"เมกาโฮม-รัตนาธิเบศร์", onhandqty:180, onhandvalue:2753.29},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:120, onhandvalue:1580.38},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:60, onhandvalue:911.89},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:60, onhandvalue:918.46},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:160, onhandvalue:1986.40},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:0, onhandvalue:0.00},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:140, onhandvalue:2174.20},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:180, onhandvalue:2798.27},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:100, onhandvalue:1554.50},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S027", sitename:"ขอนแก่น", onhandqty:180, onhandvalue:2754.96},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S028", sitename:"อุดรธานี", onhandqty:211, onhandvalue:3118.12},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:120, onhandvalue:1864.80},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:40, onhandvalue:622.00},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S073", sitename:"ศรีราชา", onhandqty:260, onhandvalue:3854.43},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S108", sitename:"ภูเก็ต (เจ้าฟ้า)", onhandqty:99, onhandvalue:1539.10},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S110", sitename:"ระยอง (ทับมา)", onhandqty:92, onhandvalue:1408.83},
+      {artno:"1145498", artdesc:"สายยางใส1\" 20M.พญานาค", siteno:"S113", sitename:"แม่สาย", onhandqty:65, onhandvalue:993.46},
+
+      // 1145575.0 สายยางม้วน PVC ใส พญานาค 5/16" 100M CL
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:365.3, onhandvalue:1246.38},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:512, onhandvalue:1657.65},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:62, onhandvalue:191.75},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:265, onhandvalue:891.56},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:206, onhandvalue:634.63},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"M012", sitename:"เมกาโฮม-เชียงราย", onhandqty:700, onhandvalue:2167.23},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"S028", sitename:"อุดรธานี", onhandqty:900, onhandvalue:3005.01},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"S065", sitename:"เชียงราย", onhandqty:300, onhandvalue:1070.13},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"S109", sitename:"ลำพูน", onhandqty:279, onhandvalue:823.05},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"S111", sitename:"เชียงใหม่ (รวมโชค)", onhandqty:120, onhandvalue:354.00},
+      {artno:"1145575", artdesc:"สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL", siteno:"S113", sitename:"แม่สาย", onhandqty:100, onhandvalue:318.05},
+
+      // 1145576.0 สายยางเขียว1/2" หนา1.6 มม.100 ม.พญานาค
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:308.11, onhandvalue:1920.96},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:500, onhandvalue:2964.95},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:62, onhandvalue:365.50},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:253, onhandvalue:1572.73},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:173, onhandvalue:983.10},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:0, onhandvalue:0.00},
+      {artno:"1145576", artdesc:"สายยางเขียว1/2\" หนา1.6 มม. 100M.พญานาค", siteno:"S065", sitename:"เชียงราย", onhandqty:500, onhandvalue:3115.75},
+
+      // 1145588.0 สายยางใส2" หนา0.6 มม. แบน30 เมตรพญานาค
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:90, onhandvalue:1428.29},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:190, onhandvalue:3316.58},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:204, onhandvalue:3520.95},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:450, onhandvalue:7212.54},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:210, onhandvalue:4115.79},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:180, onhandvalue:2495.15},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:240, onhandvalue:4453.14},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:210, onhandvalue:4115.76},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"S039", sitename:"ลำลูกกา", onhandqty:240, onhandvalue:4479.93},
+      {artno:"1145588", artdesc:"สายยางใส2\" หนา0.6 มม. แบน 30M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:210, onhandvalue:4115.79},
+
+      // 1145609.0 สายยางม้วน PVC ใส พญานาค 1/4" CL 100m
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:206.15, onhandvalue:501.98},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:366, onhandvalue:955.57},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:308, onhandvalue:826.10},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:98, onhandvalue:264.33},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:400, onhandvalue:1139.44},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:300, onhandvalue:724.70},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"S028", sitename:"อุดรธานี", onhandqty:299, onhandvalue:875.35},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"S065", sitename:"เชียงราย", onhandqty:600, onhandvalue:1756.92},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"S111", sitename:"เชียงใหม่ (รวมโชค)", onhandqty:199, onhandvalue:494.72},
+      {artno:"1145609", artdesc:"สายยางม้วน PVC ใส พญานาค 1/4\" CL 100M", siteno:"S113", sitename:"แม่สาย", onhandqty:100, onhandvalue:258.72},
+
+      // 1145619.0 สายยางใส1/2" หนา 1.4 มม.100 เมตรพญานาค
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:487.17, onhandvalue:2022.70},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M004", sitename:"เมกาโฮม-บ่อวิน", onhandqty:76, onhandvalue:321.09},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:331, onhandvalue:2217.05},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:265, onhandvalue:1706.05},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:57, onhandvalue:295.83},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M009", sitename:"เมกาโฮม-หาดใหญ่", onhandqty:300, onhandvalue:2014.04},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M015", sitename:"เมกาโฮม-พัทยา", onhandqty:600, onhandvalue:3531.56},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"M026", sitename:"เมกาโฮม-เวียงสระ", onhandqty:-294, onhandvalue:-1975.68},
+      {artno:"1145619", artdesc:"สายยางใส1/2\" หนา 1.4 มม. 100M.พญานาค", siteno:"S044", sitename:"สุพรรณบุรี", onhandqty:300, onhandvalue:2015.16},
+
+      // 1145637.0 สายยางใส 1 1/2" หนา 2มม.x 50เมตร พญานาค
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:388.31, onhandvalue:10070.63},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:150, onhandvalue:3882.32},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:100, onhandvalue:2549.58},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:185, onhandvalue:4957.14},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:150, onhandvalue:3629.26},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:262, onhandvalue:6261.10},
+      {artno:"1145637", artdesc:"สายยางใส 1 1/2\" หนา 2มม.x 50M.พญานาค", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:150, onhandvalue:3771.95},
+
+      // 1155877.0 สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4"x20M
+      {artno:"1155877", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:6, onhandvalue:2519.17},
+      {artno:"1155877", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", siteno:"M003", sitename:"เมกาโฮม-หนองคาย", onhandqty:11, onhandvalue:4080.38},
+      {artno:"1155877", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:0, onhandvalue:0.00},
+      {artno:"1155877", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:9, onhandvalue:3831.55},
+      {artno:"1155877", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", siteno:"M014", sitename:"เมกาโฮม-บางนาตราด", onhandqty:7, onhandvalue:2722.16},
+
+      // 1155903.0 สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8"x20M
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:7, onhandvalue:2087.78},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:10, onhandvalue:2853.20},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:8, onhandvalue:2091.16},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:9, onhandvalue:2589.53},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:12, onhandvalue:3724.11},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M018", sitename:"เมกาโฮม-รัตนาธิเบศร์", onhandqty:2, onhandvalue:620.27},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:8, onhandvalue:2176.54},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:6, onhandvalue:1839.30},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:7, onhandvalue:2076.00},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:8, onhandvalue:2392.68},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:4, onhandvalue:1215.85},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:4, onhandvalue:1217.51},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:5, onhandvalue:1568.54},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"S027", sitename:"ขอนแก่น", onhandqty:11, onhandvalue:3232.21},
+      {artno:"1155903", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", siteno:"S108", sitename:"ภูเก็ต (เจ้าฟ้า)", onhandqty:8, onhandvalue:2244.89},
+
+      // 1155951.0 สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8"x10M
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M005", sitename:"เมกาโฮม-กบินทร์บุรี", onhandqty:9, onhandvalue:1425.14},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:2, onhandvalue:316.42},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:4, onhandvalue:618.85},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M008", sitename:"เมกาโฮม-โรจนะ", onhandqty:26, onhandvalue:3533.30},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:11, onhandvalue:1714.10},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M011", sitename:"เมกาโฮม-นครพนม", onhandqty:11, onhandvalue:1598.76},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M013", sitename:"เมกาโฮม บ้านฉาง", onhandqty:0, onhandvalue:0.00},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M016", sitename:"เมกาโฮม-ฉะเชิงเทรา", onhandqty:13, onhandvalue:2039.48},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M017", sitename:"เมกาโฮม-สุราษฎร์ธานี", onhandqty:17, onhandvalue:2559.13},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M019", sitename:"เมกาโฮม-บางพลี", onhandqty:9, onhandvalue:1408.31},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M020", sitename:"เมกาโฮม-ติวานนท์", onhandqty:19, onhandvalue:2962.34},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M021", sitename:"เมกาโฮม-นครปฐม", onhandqty:10, onhandvalue:1583.90},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M022", sitename:"เมกาโฮม-เชียงใหม่", onhandqty:14, onhandvalue:2147.19},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M023", sitename:"เมกาโฮม-บางแสน", onhandqty:9, onhandvalue:1392.75},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M024", sitename:"เมกาโฮม-ปลวกแดง", onhandqty:6, onhandvalue:931.09},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"M025", sitename:"เมกาโฮม-ทุ่งสง", onhandqty:8, onhandvalue:1196.83},
+      {artno:"1155951", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", siteno:"S027", sitename:"ขอนแก่น", onhandqty:10, onhandvalue:1540.44},
+
+      // 1155961.0 สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4"x10M
+      {artno:"1155961", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", siteno:"M001", sitename:"เมกาโฮม-รังสิต", onhandqty:13, onhandvalue:2353.19},
+      {artno:"1155961", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", siteno:"M006", sitename:"เมกาโฮม-มีนบุรี", onhandqty:3, onhandvalue:627.13},
+      {artno:"1155961", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", siteno:"M007", sitename:"เมกาโฮม-อรัญประเทศ", onhandqty:17, onhandvalue:3408.38},
+      {artno:"1155961", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:10, onhandvalue:1835.85}
+    ];
+
+    let currentSort = { col: 'onhandvalue', desc: true };
+    let filteredData = [...rawStockData];
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      let sumQty = 0;
+      let sumVal = 0;
+
+      filteredData.forEach(item => {
+        sumQty += item.onhandqty;
+        sumVal += item.onhandvalue;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">ปกติ</span>';
+        if (item.onhandqty < 0) {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800">ติดลบ (เช็คด่วน)</span>';
+          tr.className += " bg-red-50/40";
+        } else if (item.onhandqty === 0) {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">สินค้าหมด</span>';
+        }
+
+        let branchFullName = item.sitename;
+        let channelBadge = '';
+        if (item.siteno.startsWith('DC')) {
+          channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded mr-1.5">DC</span>';
+          if (!branchFullName.includes('คลัง') && !branchFullName.includes('DC')) {
+            branchFullName = 'คลัง ' + branchFullName;
+          }
+        } else if (item.siteno.startsWith('M')) {
+          channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-800 font-semibold rounded mr-1.5">เมกาโฮม</span>';
+          branchFullName = branchFullName.replace(/^เมกาโฮม[\s-]/, '');
+        } else if (item.siteno.startsWith('S')) {
+          channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-800 font-semibold rounded mr-1.5">โฮมโปร</span>';
+          branchFullName = branchFullName.replace(/^โฮมโปร[\s-]/, '');
+        }
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono font-medium text-slate-900">${item.artno}</td>
+          <td class="py-3 px-4 text-slate-800 font-medium">${item.artdesc}</td>
+          <td class="py-3 px-4 text-slate-800 font-medium">${channelBadge}${branchFullName}</td>
+          <td class="py-3 px-4 text-right font-mono font-medium ${item.onhandqty < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}">${item.onhandqty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-4 text-right font-mono font-semibold ${item.onhandvalue < 0 ? 'text-red-600 font-bold' : 'text-slate-900'}">฿${item.onhandvalue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-4 text-center">${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('row-count-badge').textContent = `แสดง ${filteredData.length} จาก ${rawStockData.length} รายการ`;
+      document.getElementById('table-subtotal-qty').textContent = sumQty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+      document.getElementById('table-subtotal-val').textContent = `฿${sumVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const group = document.getElementById('groupFilter').value;
+      const channel = document.getElementById('channelFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      filteredData = rawStockData.filter(item => {
+        // Search text
+        if (q) {
+          const match = item.artno.toLowerCase().includes(q) || 
+                        item.artdesc.toLowerCase().includes(q) || 
+                        item.siteno.toLowerCase().includes(q) || 
+                        item.sitename.toLowerCase().includes(q);
+          if (!match) return false;
+        }
+
+        // Group filter
+        if (group !== 'ALL' && !item.artdesc.includes(group)) {
+          return false;
+        }
+
+        // Channel filter
+        if (channel === 'DC' && !item.siteno.startsWith('DC')) return false;
+        if (channel === 'MEGA' && !item.siteno.startsWith('M')) return false;
+        if (channel === 'HOMEPRO' && !item.siteno.startsWith('S')) return false;
+
+        // Status filter
+        if (status === 'NORMAL' && item.onhandqty <= 0) return false;
+        if (status === 'NEGATIVE' && item.onhandqty >= 0) return false;
+        if (status === 'ZERO' && item.onhandqty !== 0) return false;
+
+        return true;
+      });
+
+      doSort();
+      renderTable();
+    }
+
+    function filterNegativeOnly() {
+      document.getElementById('statusFilter').value = 'NEGATIVE';
+      document.getElementById('groupFilter').value = 'ALL';
+      document.getElementById('channelFilter').value = 'ALL';
+      document.getElementById('searchInput').value = '';
+      applyFilters();
+      document.getElementById('stockTable').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('groupFilter').value = 'ALL';
+      document.getElementById('channelFilter').value = 'ALL';
+      document.getElementById('statusFilter').value = 'ALL';
+      applyFilters();
+    }
+
+    function sortTable(col) {
+      if (currentSort.col === col) {
+        currentSort.desc = !currentSort.desc;
+      } else {
+        currentSort.col = col;
+        currentSort.desc = true;
+      }
+      doSort();
+      renderTable();
+    }
+
+    function doSort() {
+      filteredData.sort((a, b) => {
+        let valA = a[currentSort.col];
+        let valB = b[currentSort.col];
+        if (typeof valA === 'string') {
+          return currentSort.desc ? valB.localeCompare(valA, 'th') : valA.localeCompare(valB, 'th');
+        }
+        return currentSort.desc ? valB - valA : valA - valB;
+      });
+    }
+
+    function exportToCSV() {
+      let csvContent = "\uFEFFรหัสสินค้า (ARTNO),ชื่อรายการสินค้าเต็ม (ARTDESC),ชื่อสาขาเต็ม (SITENAME),จำนวนคงเหลือ (ONHANDQTY),มูลค่าราคาเต็ม (ONHANDVALUE)\n";
+      filteredData.forEach(r => {
+        let branchFullName = r.sitename;
+        if (r.siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
+          branchFullName = 'โฮมโปร ' + branchFullName;
+        } else if (r.siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
+          branchFullName = 'คลังศูนย์กระจายสินค้า ' + branchFullName;
+        }
+        csvContent += `"${r.artno}","${r.artdesc.replace(/"/g, '""')}","${branchFullName.replace(/"/g, '""')}",${r.onhandqty},${r.onhandvalue.toFixed(2)}\n`;
+      });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Stock_Phayanak_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Initialize Charts
+    window.addEventListener('DOMContentLoaded', () => {
+      doSort();
+      renderTable();
+
+      // Category Calculation
+      let clearVal = 0, greenVal = 0, elasticVal = 0, rollVal = 0;
+      rawStockData.forEach(r => {
+        if (r.artdesc.includes('สายยางใส')) clearVal += r.onhandvalue;
+        else if (r.artdesc.includes('สายยางเขียว')) greenVal += r.onhandvalue;
+        else if (r.artdesc.includes('สายยางเด้ง')) elasticVal += r.onhandvalue;
+        else rollVal += r.onhandvalue;
+      });
+
+      // 1. Category Chart
+      const ctxCat = document.getElementById('categoryChart').getContext('2d');
+      new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+          labels: ['สายยางใส', 'สายยางเขียว', 'สายยางเด้ง ฟ้ามัน', 'สายยางม้วน PVC'],
+          datasets: [{
+            data: [clearVal, greenVal, elasticVal, rollVal],
+            backgroundColor: ['#2563eb', '#10b981', '#0284c7', '#f59e0b'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${((ctx.raw/1027616.02)*100).toFixed(2)}%)`
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Trend Chart (มิ.ย. -> ก.ย. 2026)
+      const ctxTrend = document.getElementById('trendChart').getContext('2d');
+      new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26'],
+          datasets: [{
+            label: 'มูลค่าสต็อกราคาเต็ม (บาท)',
+            data: [1417737.42, 1238958.92, 1119305.93, 1027616.02],
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 5,
+            pointBackgroundColor: '#1d4ed8'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` มูลค่าคงเหลือเต็ม: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              min: 800000,
+              ticks: { callback: (v) => '฿' + v.toLocaleString() }
+            }
+          }
+        }
+      });
+
+      // 3. Top Branches Chart (ชื่อสาขาเต็ม & มูลค่าราคาเต็ม ไม่ใส่ตัวเลขสาขา)
+      const branchMap = {};
+      rawStockData.forEach(r => {
+        let branchFullName = r.sitename;
+        if (r.siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
+          branchFullName = 'โฮมโปร ' + branchFullName;
+        } else if (r.siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
+          branchFullName = 'คลังศูนย์กระจายสินค้า ' + branchFullName;
+        }
+        branchMap[branchFullName] = (branchMap[branchFullName] || 0) + r.onhandvalue;
+      });
+      const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+
+      const ctxBranch = document.getElementById('branchChart').getContext('2d');
+      new Chart(ctxBranch, {
+        type: 'bar',
+        data: {
+          labels: sortedBranches.map(b => b[0]),
+          datasets: [{
+            label: 'มูลค่าสต็อกราคาเต็ม (บาท)',
+            data: sortedBranches.map(b => b[1]),
+            backgroundColor: '#4f46e5',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` มูลค่าราคาเต็ม: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { callback: (v) => '฿' + v.toLocaleString() }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
