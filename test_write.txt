@@ -1,0 +1,2 @@
+ARTNO,ARTDESC,SITENAME,ONHANDQTY,ONHANDVALUE
+1132398,"สายยางใส1/2"" 10M.พญานาค",คลังศูนย์กระจายสินค้า สาขาวังน้อย,62,3855.78
