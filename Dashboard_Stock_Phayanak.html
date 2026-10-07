@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Executive Stock Dashboard - สายยางพญานาค (HomePro & Mega Home)</title>
-  <!-- Tailwind CSS & Chart.js -->
+  <title>Executive Stock Dashboard - สายยาง แบรนด์ พญานาค (HomePro & Mega Home)</title>
+  <!-- Tailwind CSS, Chart.js & SheetJS (Excel Parser) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,27 +21,60 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
 
+  <!-- Top Notification Banner for Latest Stock 7_10_2026 -->
+  <div id="latestUpdateBanner" class="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white px-4 py-2.5 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-3 shadow border-b border-emerald-500/30 no-print">
+    <div class="flex items-center gap-2">
+      <span class="text-base animate-pulse">📢</span>
+      <span><strong>อัปเดตข้อมูลล่าสุด:</strong> ไฟล์ <strong>Stock PTI 7_10_2026</strong> (งวด 07 ต.ค. 2026) พร้อมใช้งาน</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="document.getElementById('csvFileInput').click()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+        <span>📂</span> <span>คลิกเลือกไฟล์ Stock PTI 7_10_2026.xls เพื่อโหลดข้อมูล</span>
+      </button>
+      <button onclick="promptCustomSheet()" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition border border-white/20">
+        <span>📋</span> <span>หรือซิงค์ชีต 6</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Top Header Navigation -->
   <header class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center flex-wrap gap-2">
           <span class="px-3 py-1 bg-amber-500 text-slate-900 text-xs font-bold rounded-full uppercase tracking-wider">Executive Report</span>
-          <span class="text-xs text-blue-200">อัปเดตล่าสุด: 16 ตุลาคม 2026</span>
+          <span class="text-xs text-blue-200">อัปเดตล่าสุด: 30 กันยายน 2026 (สิ้นเดือน ก.ย.)</span>
+          <a href="https://docs.google.com/spreadsheets/d/1qvSzyD4ZsR2d4j9l_c9X6vKKE4CMTMCNmSsEcrMlCZM/edit?gid=2010456650#gid=2010456650" target="_blank" class="inline-flex items-center gap-1 text-xs px-2.5 py-0.5 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 border border-emerald-400/40 rounded-full transition shadow-sm" title="คลิกเพื่อเปิดไฟล์ Google Sheets ชีต 5 ต้นฉบับ">
+            <svg class="w-3.5 h-3.5 fill-emerald-300" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H6v-2h6v2zm4-4H6v-2h10v2zm0-4H6V7h10v2z"/></svg>
+            Google Sheets: stock พญานาค (ชีต 5)
+          </a>
         </div>
         <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mt-1 flex items-center gap-2">
-          📊 รายงานสินค้าคงเหลือ: ตราพญานาค
+          📊 รายงานสินค้าคงเหลือ: แบรนด์ พญานาค
         </h1>
         <p class="text-sm text-blue-200 mt-0.5">เครือ HomePro & Mega Home | บจ. ทีทีที คอร์ปอเรชั่น</p>
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-2 no-print">
-        <button onclick="window.print()" class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition flex items-center gap-2">
-          🖨️ พิมพ์ / บันทึก PDF
+      <div class="flex items-center flex-wrap gap-2 no-print">
+        <input type="file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" style="display:none;" onchange="handleFileImport(event)">
+        <button id="syncBtn" onclick="syncFromGoogleSheets()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 border border-blue-400 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow text-white" title="เชื่อมต่อดึงข้อมูลสดจาก Google Sheets แบบเรียลไทม์ (ไม่มีปัญหา CORS)">
+          <span id="syncIcon">🔄</span> <span id="syncText">ซิงค์สด Google Sheets</span>
         </button>
-        <button onclick="exportToCSV()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium shadow transition flex items-center gap-2">
-          📥 ส่งออก Excel (CSV)
+        <button onclick="promptCustomSheet()" class="px-3.5 py-2 bg-indigo-700 hover:bg-indigo-600 border border-indigo-400 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow text-white" title="ระบุลิงก์หรือ GID ของชีต 6 เพื่อดึงข้อมูลเข้าสู่แดชบอร์ด">
+          <span>📋</span> <span>ซิงค์ชีต 6</span>
+        </button>
+        <button onclick="document.getElementById('csvFileInput').click()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 border border-emerald-500/50 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow text-white" title="นำเข้าไฟล์ CSV หรือ Excel (.xls, .xlsx) จากเครื่องคอมพิวเตอร์ (สำหรับใช้งานออฟไลน์ 100%)">
+          <span>📂</span> <span>นำเข้าไฟล์ (CSV / Excel .xls)</span>
+        </button>
+        <a href="https://docs.google.com/spreadsheets/d/1qvSzyD4ZsR2d4j9l_c9X6vKKE4CMTMCNmSsEcrMlCZM/edit?gid=2010456650#gid=2010456650" target="_blank" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-sm font-medium transition flex items-center gap-1.5 shadow text-white" title="เปิดดูและแก้ไข Google Sheets ชีต 5 ต้นฉบับในแท็บใหม่">
+          📊 เปิดชีตต้นฉบับ (ชีต 5)
+        </a>
+        <button onclick="window.print()" class="px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium transition flex items-center gap-1.5 text-white">
+          🖨️ พิมพ์ / PDF
+        </button>
+        <button onclick="exportToCSV()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-lg text-sm font-medium shadow transition flex items-center gap-1.5">
+          📥 ส่งออก CSV
         </button>
       </div>
     </div>
@@ -55,11 +89,11 @@
         <div class="absolute right-3 top-3 opacity-10 text-5xl">💰</div>
         <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">มูลค่าราคาเต็มคงเหลือรวม (On Hand Value)</p>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-val">฿1,027,616.02</span>
+          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-val">฿898,891.35</span>
         </div>
-        <div class="mt-3 flex items-center text-xs text-slate-500">
-          <span class="text-emerald-600 font-semibold flex items-center gap-1">📉 ลดลง 27.52%</span>
-          <span class="ml-1">จาก มิ.ย. (฿1,417,737.42) หมุนเวียนสต็อกดีขึ้น</span>
+        <div class="mt-3 flex items-center text-xs text-slate-500" id="kpi-decrease-subtext">
+          <span class="text-emerald-600 font-semibold flex items-center gap-1">📉 ลดลง 36.60%</span>
+          <span class="ml-1">จาก มิ.ย. (฿1,417,737.42) ระบายสต็อกต่อเนื่อง</span>
         </div>
       </div>
 
@@ -68,12 +102,12 @@
         <div class="absolute right-3 top-3 opacity-10 text-5xl">📦</div>
         <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">จำนวนชิ้น/ม้วนคงเหลือ (On Hand Qty)</p>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-qty">20,726</span>
+          <span class="text-3xl font-extrabold text-blue-950" id="kpi-total-qty">17,432</span>
           <span class="text-sm font-medium text-slate-500">ม้วน/ชิ้น</span>
         </div>
         <div class="mt-3 text-xs text-slate-500 flex items-center justify-between">
-          <span>พร้อมขาย (Available):</span>
-          <span class="font-bold text-slate-700">19,293 ม้วน (93.1%)</span>
+          <span>พร้อมขาย (On Hand > 0):</span>
+          <span class="font-bold text-slate-700" id="kpi-available-qty">18,532 ม้วน (฿915,501)</span>
         </div>
       </div>
 
@@ -82,15 +116,15 @@
         <div class="absolute right-3 top-3 opacity-10 text-5xl">🏬</div>
         <p class="text-xs font-semibold uppercase text-slate-500 tracking-wider">รายการสินค้า & สาขาที่มีสต็อก</p>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sku">35</span>
+          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sku">33</span>
           <span class="text-sm font-medium text-slate-500">SKUs</span>
           <span class="mx-1 text-slate-300">|</span>
-          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sites">38</span>
+          <span class="text-3xl font-extrabold text-indigo-900" id="kpi-total-sites">36</span>
           <span class="text-sm font-medium text-slate-500">สาขา</span>
         </div>
-        <div class="mt-3 text-xs text-slate-500 flex items-center gap-2">
+        <div class="mt-3 text-xs text-slate-500 flex items-center gap-2" id="kpi-channel-breakdown">
           <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-medium">DC 1</span>
-          <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-medium">Mega Home 25</span>
+          <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-medium">Mega Home 23</span>
           <span class="px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">HomePro 12</span>
         </div>
       </div>
@@ -100,12 +134,12 @@
         <div class="absolute right-3 top-3 opacity-15 text-5xl">⚠️</div>
         <p class="text-xs font-semibold uppercase text-red-600 tracking-wider">แจ้งเตือนผู้บริหาร (สต็อกติดลบ)</p>
         <div class="mt-2 flex items-baseline gap-2">
-          <span class="text-3xl font-extrabold text-red-600" id="kpi-neg-count">3</span>
+          <span class="text-3xl font-extrabold text-red-600" id="kpi-neg-count">13</span>
           <span class="text-sm font-medium text-red-500">รายการติดลบ</span>
         </div>
         <div class="mt-3 text-xs text-red-700 flex items-center justify-between">
           <span>กระทบมูลค่า:</span>
-          <span class="font-bold">-฿3,109.10</span>
+          <span class="font-bold" id="kpi-neg-val">-฿16,609.47</span>
           <button onclick="filterNegativeOnly()" class="underline text-red-800 font-bold hover:text-red-950">คลิกตรวจสอบ</button>
         </div>
       </div>
@@ -132,10 +166,10 @@
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80">
         <div class="flex justify-between items-center mb-4">
           <div>
-            <h3 class="font-bold text-slate-900 text-base">แนวโน้มมูลค่าสต็อก 4 เดือนย้อนหลัง</h3>
-            <p class="text-xs text-slate-500">มิ.ย. - ก.ย. 2026 (บาท)</p>
+            <h3 class="font-bold text-slate-900 text-base">แนวโน้มมูลค่าสต็อก 5 งวด (มิ.ย. - สิ้น ก.ย. 2026)</h3>
+            <p class="text-xs text-slate-500">มิ.ย. - สิ้น ก.ย. 2026 (บาท)</p>
           </div>
-          <span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">Clearance -27.5%</span>
+          <span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">Clearance -36.6%</span>
         </div>
         <div class="relative h-64">
           <canvas id="trendChart"></canvas>
@@ -166,10 +200,10 @@
             <span class="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-xs font-bold rounded-full uppercase tracking-wider">Pareto 70/30 Analysis</span>
             <h2 class="text-xl font-bold text-slate-900">🏆 10 อันดับสินค้าที่มีมูลค่าสต็อกสูงสุด (จากมากไปหาน้อย)</h2>
           </div>
-          <p class="text-xs text-slate-500 mt-1">10 รายการนี้ครองมูลค่ารวม <strong>฿700,655.17 (68.2%)</strong> ของสต็อกทั้งหมด ควรเน้นทำแคมเปญระบายสต็อกในกลุ่มนี้เป็นอันดับแรก</p>
+          <p class="text-xs text-slate-500 mt-1" id="top10SummaryText">10 รายการนี้ครองมูลค่ารวม <strong>฿608,135.86 (67.7%)</strong> ของสต็อกทั้งหมด ควรเน้นทำแคมเปญระบายสต็อกในกลุ่มนี้เป็นอันดับแรก</p>
         </div>
-        <span class="text-xs font-semibold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg">
-          มูลค่ารวม Top 10: ฿700,655 (68.2%)
+        <span class="text-xs font-semibold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg" id="top10SubtotalBadge">
+          มูลค่ารวม Top 10: ฿608,136 (67.7%)
         </span>
       </div>
 
@@ -186,113 +220,152 @@
               <th class="py-3 px-4 text-center">ระดับความสำคัญ</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
+          <tbody id="top10Tbody" class="divide-y divide-slate-100">
             <tr class="hover:bg-amber-50/30 bg-amber-50/10 transition">
               <td class="py-3 px-4 text-center font-bold text-amber-600">🥇 1</td>
               <td class="py-3 px-4 font-mono font-bold text-slate-900">1132561</td>
               <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 1" หนา 1.5 มม. 100 เมตร พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">119.00</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿194,618.02</td>
-              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">18.94%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">108.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿176,966.38</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">19.69%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูงสุด</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
               <td class="py-3 px-4 text-center font-bold text-slate-500">🥈 2</td>
               <td class="py-3 px-4 font-mono font-bold text-slate-900">1132492</td>
               <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 3/4" หนา 1.5 มม. 100 เมตร พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">98.00</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿125,514.82</td>
-              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">12.21%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">94.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿120,404.14</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">13.39%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูง</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
               <td class="py-3 px-4 text-center font-bold text-amber-700">🥉 3</td>
               <td class="py-3 px-4 font-mono font-bold text-slate-900">1132470</td>
               <td class="py-3 px-4 font-semibold text-slate-800">สายยางใส 2" หนา 1.5 มม. 30 เมตร พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">60.00</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿85,936.69</td>
-              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">8.36%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">59.00</td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿84,504.69</td>
+              <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">9.40%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-orange-100 text-orange-800 text-xs font-semibold rounded">ระบายด่วน</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
               <td class="py-3 px-4 text-center font-bold text-slate-400">4</td>
               <td class="py-3 px-4 font-mono font-medium text-slate-900">1132522</td>
               <td class="py-3 px-4 text-slate-800">สายยางใส 5/8" หนา 1.5 มม. 100 เมตร พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">69.00</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿65,662.10</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">6.39%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">68.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿64,709.73</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">7.20%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดมาตรฐาน</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
               <td class="py-3 px-4 text-center font-bold text-slate-400">5</td>
-              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145498</td>
-              <td class="py-3 px-4 text-slate-800">สายยางใส 1" 20M. พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">4,052.87</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿61,909.65</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">6.03%</td>
-              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">ปริมาณมากสุด</span></td>
-            </tr>
-            <tr class="hover:bg-slate-50 transition">
-              <td class="py-3 px-4 text-center font-bold text-slate-400">6</td>
-              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145588</td>
-              <td class="py-3 px-4 text-slate-800">สายยางใส 2" หนา 0.6 มม. แบน 30 เมตร พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">2,224.00</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿39,253.92</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">3.82%</td>
-              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">เกษตร/สูบน้ำ</span></td>
-            </tr>
-            <tr class="hover:bg-slate-50 transition">
-              <td class="py-3 px-4 text-center font-bold text-slate-400">7</td>
               <td class="py-3 px-4 font-mono font-medium text-slate-900">1145637</td>
               <td class="py-3 px-4 text-slate-800">สายยางใส 1 1/2" หนา 2 มม. x 50 เมตร พญานาค</td>
               <td class="py-3 px-4 text-right font-mono font-medium">1,385.31</td>
               <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿35,121.98</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">3.42%</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.91%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">งานช่าง/เกษตร</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
-              <td class="py-3 px-4 text-center font-bold text-slate-400">8</td>
+              <td class="py-3 px-4 text-center font-bold text-slate-400">6</td>
               <td class="py-3 px-4 font-mono font-medium text-slate-900">1132493</td>
               <td class="py-3 px-4 text-slate-800">สายยางใส 1/2" 20M. พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">277.00</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿34,387.79</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">3.35%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">240.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿29,663.63</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.30%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดใช้ในบ้าน</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
-              <td class="py-3 px-4 text-center font-bold text-slate-400">9</td>
+              <td class="py-3 px-4 text-center font-bold text-slate-400">7</td>
               <td class="py-3 px-4 font-mono font-medium text-slate-900">1155903</td>
               <td class="py-3 px-4 text-slate-800">สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8" x 20M</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">109.00</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿29,929.57</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">2.91%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">101.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿27,789.70</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">3.09%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded">เกรดพรีเมียม</span></td>
             </tr>
             <tr class="hover:bg-slate-50 transition">
-              <td class="py-3 px-4 text-center font-bold text-slate-400">10</td>
+              <td class="py-3 px-4 text-center font-bold text-slate-400">8</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1145588</td>
+              <td class="py-3 px-4 text-slate-800">สายยางใส 2" หนา 0.6 มม. แบน 30 เมตร พญานาค</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">1,381.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿24,784.82</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">2.76%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">เกษตร/สูบน้ำ</span></td>
+            </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">9</td>
               <td class="py-3 px-4 font-mono font-medium text-slate-900">1132574</td>
               <td class="py-3 px-4 text-slate-800">สายยางเขียว 1" 20M. พญานาค</td>
-              <td class="py-3 px-4 text-right font-mono font-medium">121.00</td>
-              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿28,320.63</td>
-              <td class="py-3 px-4 text-center font-mono text-slate-600">2.76%</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">98.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿22,865.17</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">2.54%</td>
               <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">เขียวขายดี</span></td>
             </tr>
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 text-center font-bold text-slate-400">10</td>
+              <td class="py-3 px-4 font-mono font-medium text-slate-900">1133114</td>
+              <td class="py-3 px-4 text-slate-800">สายยางม้วน PVC เขียว พญานาค 1" 100M CL</td>
+              <td class="py-3 px-4 text-right font-mono font-medium">18.00</td>
+              <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900 bg-amber-50/50">฿21,325.60</td>
+              <td class="py-3 px-4 text-center font-mono text-slate-600">2.37%</td>
+              <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">ม้วนใหญ่</span></td>
+            </tr>
           </tbody>
-          <tfoot class="bg-slate-100 font-bold border-t-2 border-slate-300">
+          <tfoot id="top10Tfoot" class="bg-slate-100 font-bold border-t-2 border-slate-300">
             <tr>
               <td colspan="3" class="py-3.5 px-4 text-right text-slate-900">รวม 10 อันดับสูงสุด (Top 10 Subtotal):</td>
-              <td class="py-3.5 px-4 text-right font-mono text-indigo-900">8,506.18 ม้วน</td>
-              <td class="py-3.5 px-4 text-right font-mono text-emerald-800 bg-amber-100/60 text-base">฿700,655.17</td>
-              <td class="py-3.5 px-4 text-center font-mono text-indigo-900 font-extrabold">68.18%</td>
-              <td class="py-3.5 px-4 text-center text-xs text-slate-500">ครอง 68.2% ของสต็อก</td>
+              <td class="py-3.5 px-4 text-right font-mono text-indigo-900">3,552.31 ม้วน</td>
+              <td class="py-3.5 px-4 text-right font-mono text-emerald-800 bg-amber-100/60 text-base">฿608,135.86</td>
+              <td class="py-3.5 px-4 text-center font-mono text-indigo-900 font-extrabold">67.65%</td>
+              <td class="py-3.5 px-4 text-center text-xs text-slate-500">ครอง 67.7% ของสต็อก</td>
             </tr>
             <tr class="text-xs text-slate-600 bg-slate-50">
-              <td colspan="3" class="py-2.5 px-4 text-right">รายการอื่นๆ ที่เหลือ 25 SKUs:</td>
-              <td class="py-2.5 px-4 text-right font-mono">12,219.73 ม้วน</td>
-              <td class="py-2.5 px-4 text-right font-mono font-semibold">฿326,960.85</td>
-              <td class="py-2.5 px-4 text-center font-mono">31.82%</td>
+              <td colspan="3" class="py-2.5 px-4 text-right">รายการอื่นๆ ที่เหลือ 23 SKUs:</td>
+              <td class="py-2.5 px-4 text-right font-mono">13,879.56 ม้วน</td>
+              <td class="py-2.5 px-4 text-right font-mono font-semibold">฿290,755.49</td>
+              <td class="py-2.5 px-4 text-center font-mono">32.35%</td>
               <td></td>
             </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section: Retail Price & Promotion Table (ตารางราคาขายปลีก & สินค้าจัดโปรโมชั่น) -->
+    <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-indigo-200/80 space-y-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-100 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full uppercase tracking-wider">Promotion 1 แถม 1</span>
+            <h2 class="text-xl font-bold text-slate-900">🏷️ สรุปตารางราคาขายปลีก & สินค้าจัดโปรโมชั่น แบรนด์ พญานาค (20 รายการ)</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">ตารางกำหนดราคาขายปลีกและแคมเปญโปรโมชั่น ซื้อ 1 แถม 1 แบรนด์ พญานาค สำหรับสินค้าบรรจุสำเร็จ 20 รายการ</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+            🎁 จัดโปรโมชั่น ซื้อ 1 แถม 1 (20 รายการ)
+          </span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left border border-slate-200 rounded-xl overflow-hidden">
+          <thead class="bg-slate-100 text-slate-700 text-xs font-semibold uppercase">
+            <tr>
+              <th class="py-3 px-3 text-center w-12">ลำดับ</th>
+              <th class="py-3 px-3">ARTNO (รหัสสินค้า)</th>
+              <th class="py-3 px-4">ชื่อรายการสินค้า (ARTDESC)</th>
+              <th class="py-3 px-4 text-right bg-indigo-50/70 text-indigo-950 font-bold">ราคาขายปกติ (บาท)</th>
+              <th class="py-3 px-4 text-center bg-emerald-50/70 text-emerald-950 font-bold">โปรโมชั่น</th>
+              <th class="py-3 px-4 text-right bg-amber-50/70 text-amber-950 font-bold">ราคาเฉลี่ยต่อม้วน (บาท)</th>
+            </tr>
+          </thead>
+          <tbody id="promoTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic Price Master Rows -->
+          </tbody>
+          <tfoot id="promoTableFoot" class="bg-slate-100 font-bold border-t-2 border-slate-300">
+            <!-- Dynamic Price Master Footer -->
           </tfoot>
         </table>
       </div>
@@ -314,13 +387,13 @@
       <!-- 1. Historical Sales Table -->
       <div class="space-y-3">
         <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-          <span>🗓️</span> ยอดขาย/ระบายสต็อกย้อนหลังในแต่ละเดือน (Sell-Out Tracking)
+          <span>🗓️</span> ยอดขาย/ระบายสต็อกย้อนหลังในแต่ละงวด (Sell-Out Tracking 5 งวด)
         </h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-left border border-slate-200 rounded-xl overflow-hidden">
             <thead class="bg-slate-100 text-slate-700 text-xs font-semibold uppercase">
               <tr>
-                <th class="py-3 px-4">ช่วงเวลา (Period)</th>
+                <th class="py-3 px-4">ช่วงเวลางวด (Period)</th>
                 <th class="py-3 px-4 text-right">สต็อกต้นงวด (บาท)</th>
                 <th class="py-3 px-4 text-right">สต็อกปลายงวด (บาท)</th>
                 <th class="py-3 px-4 text-right bg-emerald-50 text-emerald-900">ยอดขาย/ระบายออก (บาท)</th>
@@ -353,21 +426,32 @@
                 <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">1,451.00</td>
                 <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">-8.19%</span></td>
               </tr>
+              <tr class="hover:bg-slate-50 bg-blue-50/30">
+                <td class="py-3 px-4 font-medium text-slate-900 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                  15 ก.ย. 26 - 30 ก.ย. 26 (ชีต 5 / สิ้น ก.ย.)
+                </td>
+                <td class="py-3 px-4 text-right font-mono text-slate-600">฿1,027,616.02</td>
+                <td class="py-3 px-4 text-right font-mono font-semibold text-blue-900">฿898,891.35</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">฿128,724.67</td>
+                <td class="py-3 px-4 text-right font-mono font-bold text-emerald-700 bg-emerald-50/50">3,294.04</td>
+                <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">-12.53%</span></td>
+              </tr>
             </tbody>
             <tfoot class="bg-slate-100/90 font-bold border-t border-slate-200">
               <tr>
-                <td class="py-3 px-4 text-slate-900">รวมระบายสต็อก 3 เดือนย้อนหลัง:</td>
-                <td class="py-3 px-4 text-right font-mono text-slate-500">-</td>
-                <td class="py-3 px-4 text-right font-mono text-slate-500">-</td>
-                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">฿390,121.40</td>
-                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">7,879.00</td>
-                <td class="py-3 px-4 text-center text-emerald-700">-27.52%</td>
+                <td class="py-3 px-4 text-slate-900">รวมระบายสต็อก 5 งวด (~3.75 เดือน):</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-500">฿1,417,737.42</td>
+                <td class="py-3 px-4 text-right font-mono text-slate-500">฿898,891.35</td>
+                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">฿518,846.07</td>
+                <td class="py-3 px-4 text-right font-mono text-emerald-800 bg-emerald-100/50 text-base">11,173.04</td>
+                <td class="py-3 px-4 text-center text-emerald-700 font-extrabold">-36.60%</td>
               </tr>
               <tr class="text-xs font-semibold text-slate-600 bg-slate-50">
-                <td class="py-2.5 px-4 text-blue-900">ค่าเฉลี่ยต่อเดือนที่ทำได้จริง (Run-rate):</td>
+                <td class="py-2.5 px-4 text-blue-900">ค่าเฉลี่ยต่อเดือนที่ทำได้จริง (Run-rate ~3.75 เดือน):</td>
                 <td colspan="2"></td>
-                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย ฿130,040 / เดือน</td>
-                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย 2,626 ม้วน / เดือน</td>
+                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย ฿138,359 / เดือน</td>
+                <td class="py-2.5 px-4 text-right font-mono text-blue-900">เฉลี่ย 2,979 ม้วน / เดือน</td>
                 <td></td>
               </tr>
             </tfoot>
@@ -381,7 +465,7 @@
           <span>🎯</span> คำนวณเป้าหมายยอดขายที่ต้องทำต่อเดือนก่อน 31 ธันวาคม 2026
         </h3>
         <p class="text-xs text-slate-600 mb-5">
-          สต็อกปัจจุบันคงเหลือ <strong>฿1,027,616.02 (20,726 ม้วน)</strong> เลือกระดับเป้าหมายสต็อกสิ้นปีเพื่อดูยอดขายที่ฝ่ายขายและ PC ต้องทำต่อเดือน:
+          สต็อกปัจจุบันคงเหลือ <strong>฿898,891.35 (17,432 ม้วน)</strong> เลือกระดับเป้าหมายสต็อกสิ้นปีเพื่อดูยอดขายที่ฝ่ายขายและ PC ต้องทำต่อเดือน (ระยะเวลา 3 เดือนเต็ม: ต.ค. - ธ.ค. 2026):
         </p>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -389,43 +473,43 @@
           <div class="bg-white rounded-xl p-5 border-2 border-indigo-500 shadow-sm relative">
             <span class="absolute -top-3 right-4 px-2.5 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full uppercase">เป้าหมายสูงสุด (Clearance 100%)</span>
             <h4 class="font-bold text-slate-900 text-sm">แผนที่ 1: เคลียร์สต็อกหมดเกลี้ยง (0 บาท)</h4>
-            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกทั้งสิ้น ฿1,027,616</p>
+            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกทั้งสิ้น ฿898,891</p>
             <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
               <div class="flex justify-between items-baseline">
-                <span class="text-xs text-slate-600">นับ 3.5 เดือน (ก.ย.-ธ.ค.):</span>
-                <span class="text-base font-extrabold text-indigo-700 font-mono">฿293,605 /ด.</span>
+                <span class="text-xs text-slate-600">นับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
+                <span class="text-base font-extrabold text-indigo-700 font-mono">฿299,630 /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500">
                 <span>จำนวนม้วนเฉลี่ย:</span>
-                <span class="font-mono font-semibold text-slate-700">5,922 ม้วน /ด.</span>
+                <span class="font-mono font-semibold text-slate-700">5,811 ม้วน /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
-                <span>หากนับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
-                <span class="font-mono font-bold text-slate-900">฿342,539 /ด.</span>
+                <span>เป้าต่อวัน (92 วัน):</span>
+                <span class="font-mono font-bold text-slate-900">฿9,771 /วัน</span>
               </div>
             </div>
             <div class="mt-3 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg font-medium">
-              ⚡ ต้องเร่งยอดขึ้น <strong>2.3 เท่า</strong> ของค่าเฉลี่ยปกติ (จัด 1 แถม 1 ทันที)
+              ⚡ ต้องเร่งยอดขึ้น <strong>2.16 เท่า</strong> ของค่าเฉลี่ยปกติ (จัดโปรโมชั่น 1 แถม 1 ทันที)
             </div>
           </div>
 
           <!-- Scenario B: 80% Clearance (Safety Stock 20%) -->
           <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-blue-400 transition">
             <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full uppercase">แผนแนะนำ (Realistic 80%)</span>
-            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 2: เหลือ Safety Stock 20% (฿200k)</h4>
-            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกออก ฿827,616</p>
+            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 2: เหลือ Safety Stock 20% (฿180k)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">ระบายสต็อกออก ฿719,113</p>
             <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
               <div class="flex justify-between items-baseline">
-                <span class="text-xs text-slate-600">นับ 3.5 เดือน (ก.ย.-ธ.ค.):</span>
-                <span class="text-base font-extrabold text-blue-700 font-mono">฿236,462 /ด.</span>
+                <span class="text-xs text-slate-600">นับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
+                <span class="text-base font-extrabold text-blue-700 font-mono">฿239,704 /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500">
                 <span>จำนวนม้วนเฉลี่ย:</span>
-                <span class="font-mono font-semibold text-slate-700">4,767 ม้วน /ด.</span>
+                <span class="font-mono font-semibold text-slate-700">4,648 ม้วน /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
-                <span>หากนับ 3 เดือนเต็ม (ต.ค.-ธ.ค.):</span>
-                <span class="font-mono font-bold text-slate-900">฿275,872 /ด.</span>
+                <span>เป้าต่อวัน (92 วัน):</span>
+                <span class="font-mono font-bold text-slate-900">฿7,816 /วัน</span>
               </div>
             </div>
             <div class="mt-3 text-[11px] text-blue-700 bg-blue-50 p-2 rounded-lg font-medium">
@@ -436,24 +520,24 @@
           <!-- Scenario C: Organic Run-rate (รักษาอัตราปัจจุบัน) -->
           <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:border-slate-300 transition">
             <span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full uppercase">อัตราปัจจุบัน (Baseline)</span>
-            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 3: ขายตามอัตราเดิม (฿130k/ด.)</h4>
-            <p class="text-xs text-slate-500 mt-0.5">ขายได้ประมาณ ฿455,142 ใน 3.5 เดือน</p>
+            <h4 class="font-bold text-slate-900 text-sm mt-2">แผนที่ 3: ขายตามอัตราเดิม (฿138k/ด.)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">ขายได้ประมาณ ฿415,077 ใน 3 เดือน</p>
             <div class="mt-4 pt-3 border-t border-slate-100 space-y-2">
               <div class="flex justify-between items-baseline">
                 <span class="text-xs text-slate-600">ยอดขายทำได้:</span>
-                <span class="text-base font-extrabold text-slate-800 font-mono">฿130,040 /ด.</span>
+                <span class="text-base font-extrabold text-slate-800 font-mono">฿138,359 /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500">
                 <span>จำนวนม้วนเฉลี่ย:</span>
-                <span class="font-mono font-semibold text-slate-700">2,626 ม้วน /ด.</span>
+                <span class="font-mono font-semibold text-slate-700">2,979 ม้วน /ด.</span>
               </div>
               <div class="flex justify-between items-baseline text-xs text-slate-500 pt-1 border-t border-dashed border-slate-200">
                 <span>สต็อกที่จะคงเหลือ ณ 31 ธ.ค.:</span>
-                <span class="font-mono font-bold text-amber-700">฿572,474</span>
+                <span class="font-mono font-bold text-amber-700">฿483,814</span>
               </div>
             </div>
             <div class="mt-3 text-[11px] text-slate-600 bg-slate-100 p-2 rounded-lg font-medium">
-              📌 สต็อกจะยังค้างเกิน 50% ต้องเพิ่มแคมเปญกระตุ้น PC
+              📌 สต็อกจะยังค้าง 53.8% ต้องเร่งจัดโปรโมชั่นกระตุ้น PC
             </div>
           </div>
         </div>
@@ -470,21 +554,21 @@
         <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
           <h4 class="font-semibold text-amber-400 mb-1">1. ประสิทธิภาพการระบายสต็อก (Positive Trend)</h4>
           <p class="text-xs text-slate-300 leading-relaxed">
-            มูลค่าสต็อกลดลงต่อเนื่องจาก ฿1,417,737.42 (มิ.ย.) เหลือ ฿1,027,616.02 (ก.ย.) หรือลดลง <strong>27.52% (฿390,121.40)</strong> แสดงถึงอัตราการขายออกที่ดีและการควบคุม Re-order point ได้อย่างรัดกุม ไม่เกิดปัญหาสต็อกบวม
+            มูลค่าสต็อกลดลงต่อเนื่องจาก ฿1,417,737.42 (มิ.ย.) เหลือ ฿898,891.35 (สิ้น ก.ย.) หรือลดลงสะสม <strong>36.60% (฿518,846.07)</strong> โดยเฉพาะช่วง 15-30 ก.ย. ระบายออกได้ถึง ฿128,724.67 (3,294 ม้วน) แสดงถึงอัตราการ Sell-Out ที่เร่งตัวขึ้นอย่างมีนัยสำคัญ
           </p>
         </div>
 
         <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-          <h4 class="font-semibold text-amber-400 mb-1">2. สายยางใส & สายยางเขียว ครองส่วนแบ่ง 76%</h4>
+          <h4 class="font-semibold text-amber-400 mb-1">2. สายยางใส & สายยางเขียว ครองส่วนแบ่ง 75.8%</h4>
           <p class="text-xs text-slate-300 leading-relaxed">
-            สต็อกกว่า <strong>76.39%</strong> กระจุกตัวอยู่ที่ 2 กลุ่มหลัก คือสายยางใส (฿589,842.27) และสายยางเขียว (฿195,123.63) โดยเฉพาะขนาด <strong>1" และ 1/2" ความยาว 10M-20M</strong> ซึ่งเป็น Hero SKU ควรเน้นการเติมสินค้าให้พอดีไม่ให้ขาดตลาด
+            สต็อกกว่า <strong>75.8%</strong> กระจุกตัวอยู่ที่ 2 กลุ่มหลัก คือสายยางใส (฿507,761.32) และสายยางเขียว (฿173,688.16) โดยเฉพาะขนาด <strong>1" และ 1/2" ความยาว 10M-20M</strong> ซึ่งเป็น Hero SKU ควรเน้นการจัดโปรโมชั่น 1 แถม 1 เพื่อเร่งระบายใน Q4
           </p>
         </div>
 
         <div class="bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-          <h4 class="font-semibold text-red-400 mb-1">3. ประเด็นเร่งด่วน: สต็อกติดลบ 3 รายการ</h4>
+          <h4 class="font-semibold text-red-400 mb-1">3. ประเด็นเร่งด่วน: สต็อกติดลบ 13 รายการ</h4>
           <p class="text-xs text-slate-300 leading-relaxed">
-            พบสาขาที่สต็อกติดลบในระบบ: <strong>เมกาโฮม รังสิต (สายยางใส 1" 20M: -45.13 ม้วน), เมกาโฮม รัตนาธิเบศร์ (-3 ม้วน), เมกาโฮม เวียงสระ (สายยางใส 1/2" 100M: -294 ม้วน)</strong> ต้องสั่ง Audit ตรวจนับสต็อกจริงและแก้ไขเอกสารรับเข้า/ตัดจ่ายทันที
+            พบสาขาที่สต็อกติดลบในระบบเพิ่มขึ้นเป็น <strong>13 รายการ มูลค่า -฿16,609.47 (-1,100 ม้วน)</strong> โดยเฉพาะ <strong>รหัส 1145498 (สายยางใส 1" 20M)</strong> ติดลบหนักที่อรัญประเทศ (-324 ม้วน), ติวานนท์ (-240 ม้วน), ระยอง (-228 ม้วน), ฉะเชิงเทรา (-160 ม้วน) ต้องสั่ง Audit ตรวจนับและปรับปรุงเอกสารรับเข้าด่วน
           </p>
         </div>
       </div>
@@ -502,10 +586,24 @@
         </button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <!-- Google Sheets Period Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-blue-900 mb-1">งวดข้อมูล (Google Sheets)</label>
+          <select id="sheetSelector" autocomplete="off" onchange="switchSheet(this.value)" class="w-full text-sm px-3 py-2 border border-blue-400 bg-blue-50/50 text-blue-900 font-semibold rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="import_7_10" class="font-bold text-emerald-800 bg-emerald-50">⭐ งวดล่าสุด: 07 ต.ค. 26 (Stock PTI 7_10_2026)...</option>
+            <option value="2010456650" selected>ชีต 5: 30 ก.ย. 26 (สิ้นเดือน ก.ย.)</option>
+            <option value="1943525185">ชีต 4: 15 ก.ย. 26 (กลางเดือน ก.ย.)</option>
+            <option value="698231691">ชีต 3: 17 ส.ค. 26 (~เดือน ส.ค.)</option>
+            <option value="994023301">ชีต 2: 16 ก.ค. 26 (~เดือน ก.ค.)</option>
+            <option value="0">ชีต 1: 08 มิ.ย. 26 (~เดือน มิ.ย.)</option>
+            <option value="ADD_CUSTOM">➕ ซิงค์ชีต 6 (วางลิงก์ Google Sheets / ระบุ GID)...</option>
+          </select>
+        </div>
+
         <!-- Search Query -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหา (รหัสสินค้า / ชื่อสินค้า / สาขา)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">ค้นหา (รหัส / รายการ / สาขา)</label>
           <input type="text" id="searchInput" oninput="applyFilters()" placeholder="พิมพ์ค้นหา..." class="w-full text-sm px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
 
@@ -553,7 +651,7 @@
           <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 font-semibold rounded-full" id="row-count-badge">แสดง 0 รายการ</span>
         </div>
         <div class="text-xs text-slate-500 font-medium">
-          * แสดงคอลัมน์: รหัสสินค้า (ARTNO), ชื่อรายการสินค้าเต็ม (ARTDESC), ชื่อสาขาเต็ม (SITENAME), จำนวนคงเหลือ (ONHANDQTY), มูลค่าราคาเต็ม (ONHANDVALUE)
+          * แสดงคอลัมน์: รหัสสินค้า (ARTNO), ชื่อรายการสินค้าเต็ม (ARTDESC), ชื่อสาขาเต็ม (SITENAME), ราคาขายปกติ, จำนวนคงเหลือ (ONHANDQTY), มูลค่าราคาเต็ม (ONHANDVALUE)
         </div>
       </div>
 
@@ -561,12 +659,14 @@
         <table class="w-full text-left text-sm" id="stockTable">
           <thead class="bg-slate-100/80 text-slate-700 uppercase font-semibold text-xs tracking-wider border-b border-slate-200">
             <tr>
-              <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('artno')">รหัสสินค้า (ARTNO) ⬍</th>
+              <th scope="col" class="py-3.5 px-3 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('perioddate')">งวดข้อมูล (PERIODDATE) ⬍</th>
+              <th scope="col" class="py-3.5 px-3 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('artno')">รหัสสินค้า (ARTNO) ⬍</th>
               <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('artdesc')">ชื่อรายการสินค้าเต็ม (ARTDESC) ⬍</th>
-              <th scope="col" class="py-3.5 px-4 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('sitename')">ชื่อสาขาเต็ม (SITENAME) ⬍</th>
-              <th scope="col" class="py-3.5 px-4 text-right cursor-pointer hover:bg-slate-200/70" onclick="sortTable('onhandqty')">จำนวนคงเหลือ (หน่วย) ⬍</th>
+              <th scope="col" class="py-3.5 px-3 cursor-pointer hover:bg-slate-200/70" onclick="sortTable('sitename')">ชื่อสาขาเต็ม (SITENAME) ⬍</th>
+              <th scope="col" class="py-3.5 px-3 text-right cursor-pointer hover:bg-slate-200/70 bg-indigo-50/50 text-indigo-950 font-bold" onclick="sortTable('retailPrice')">ราคาขาย ⬍</th>
+              <th scope="col" class="py-3.5 px-3 text-right cursor-pointer hover:bg-slate-200/70" onclick="sortTable('onhandqty')">จำนวนคงเหลือ (ONHANDQTY) ⬍</th>
               <th scope="col" class="py-3.5 px-4 text-right cursor-pointer hover:bg-slate-200/70 bg-amber-50/50 text-slate-900" onclick="sortTable('onhandvalue')">มูลค่าราคาเต็ม (ONHANDVALUE) ⬍</th>
-              <th scope="col" class="py-3.5 px-4 text-center">สถานะ</th>
+              <th scope="col" class="py-3.5 px-3 text-center">สถานะ</th>
             </tr>
           </thead>
           <tbody id="tableBody" class="divide-y divide-slate-100">
@@ -574,8 +674,8 @@
           </tbody>
           <tfoot class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
             <tr>
-              <td colspan="3" class="py-3.5 px-4 text-right">รวมตามรายการที่เลือก (Subtotal):</td>
-              <td class="py-3.5 px-4 text-right font-mono text-indigo-900" id="table-subtotal-qty">0</td>
+              <td colspan="5" class="py-3.5 px-4 text-right">รวมตามรายการที่เลือก (Subtotal):</td>
+              <td class="py-3.5 px-3 text-right font-mono text-indigo-900" id="table-subtotal-qty">0</td>
               <td class="py-3.5 px-4 text-right font-mono text-emerald-800 bg-amber-100/60" id="table-subtotal-val">฿0.00</td>
               <td></td>
             </tr>
@@ -586,15 +686,15 @@
 
     <!-- Footer Note -->
     <footer class="text-center text-xs text-slate-400 py-4 border-t border-slate-200">
-      ระบบจัดการวิเคราะห์ข้อมูลสต็อกสินค้าพญานาค • จัดทำเพื่อการนำเสนอผู้บริหารระดับสูง • ข้อมูล ณ วันที่ 16 ตุลาคม 2026
+      ระบบจัดการวิเคราะห์ข้อมูลสต็อกสินค้า แบรนด์ พญานาค • จัดทำเพื่อการนำเสนอผู้บริหารระดับสูง • ข้อมูล ณ วันที่ 30 กันยายน 2026 (สิ้นเดือน ก.ย.)
     </footer>
 
   </main>
 
   <!-- Embedded Raw Stock Data & Interactive Script -->
   <script>
-    // Complete structured raw data from Stock PTI 16_9_2026.xls
-    const rawStockData = [
+    // Historical structured raw data: Sheet 4 (15 ก.ย. 2026)
+    const sheet4Data = [
       // 1132398.0 สายยางใส1/2" 10M.พญานาค
       {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"DC02", sitename:"สาขาวังน้อย", onhandqty:62, onhandvalue:3855.78},
       {artno:"1132398", artdesc:"สายยางใส1/2\" 10M.พญานาค", siteno:"M002", sitename:"เมกาโฮม-แม่สอด", onhandqty:14, onhandvalue:870.66},
@@ -1056,8 +1156,492 @@
       {artno:"1155961", artdesc:"สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", siteno:"M010", sitename:"เมกาโฮม-นครราชสีมา", onhandqty:10, onhandvalue:1835.85}
     ];
 
+    // Compact Sheet 5 Data: 30 ก.ย. 2026 (สิ้นเดือน ก.ย.) - Total 363 items
+    const sheet5Compact = [
+      // 1132398: สายยางใส1/2" 10M.พญานาค (30 sites)
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","DC02","สาขาวังน้อย",39,2425.41],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M002","เมกาโฮม-แม่สอด",14,870.66],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M004","เมกาโฮม-บ่อวิน",1,55.22],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",13,808.47],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M006","เมกาโฮม-มีนบุรี",1,62.17],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",8,442.45],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M008","เมกาโฮม-โรจนะ",23,1364.51],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M009","เมกาโฮม-หาดใหญ่",20,1243.80],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M010","เมกาโฮม-นครราชสีมา",13,767.40],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M011","เมกาโฮม-นครพนม",3,172.93],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M013","เมกาโฮม บ้านฉาง",6,358.31],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M014","เมกาโฮม-บางนาตราด",2,122.44],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M016","เมกาโฮม-ฉะเชิงเทรา",9,490.55],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M017","เมกาโฮม-สุราษฎร์ธานี",10,530.66],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M019","เมกาโฮม-บางพลี",1,54.42],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M020","เมกาโฮม-ติวานนท์",8,455.34],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M021","เมกาโฮม-นครปฐม",18,1119.42],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M023","เมกาโฮม-บางแสน",12,706.38],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M024","เมกาโฮม-ปลวกแดง",1,59.58],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M025","เมกาโฮม-ทุ่งสง",9,538.60],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","M026","เมกาโฮม-เวียงสระ",10,621.90],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S027","ขอนแก่น",2,120.67],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S028","อุดรธานี",9,545.78],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S039","ลำลูกกา",14,870.66],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S044","สุพรรณบุรี",11,684.09],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S065","เชียงราย",11,684.09],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S073","ศรีราชา",8,437.76],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S108","ภูเก็ต (เจ้าฟ้า)",8,443.38],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S110","ระยอง (ทับมา)",5,290.77],
+      ["1132398","สายยางใส1/2\" 10M.พญานาค","S115","พุทธมณฑล สาย4",6,373.14],
+
+      // 1132399: สายยางใส1"10M.พญานาค (17 sites)
+      ["1132399","สายยางใส1\" 10M.พญานาค","DC02","สาขาวังน้อย",21,3225.18],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M002","เมกาโฮม-แม่สอด",7,1072.42],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",1,155.49],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",4,594.66],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M011","เมกาโฮม-นครพนม",2,299.72],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M012","เมกาโฮม-เชียงราย",1,146.30],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M016","เมกาโฮม-ฉะเชิงเทรา",-1,-151.19],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M017","เมกาโฮม-สุราษฎร์ธานี",7,1050.39],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M018","เมกาโฮม-รัตนาธิเบศร์",-1,-155.05],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M020","เมกาโฮม-ติวานนท์",1,150.77],
+      ["1132399","สายยางใส1\" 10M.พญานาค","M026","เมกาโฮม-เวียงสระ",25,3789.36],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S020","หาดใหญ่",6,932.94],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S027","ขอนแก่น",1,153.51],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S041","นครศรีธรรมราช",6,932.94],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S056","ชุมพร",10,1554.90],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S065","เชียงราย",4,621.96],
+      ["1132399","สายยางใส1\" 10M.พญานาค","S110","ระยอง (ทับมา)",-1,-154.59],
+
+      // 1132470: สายยางใส2" หนา 1.5 มม. 30 เมตรพญานาค (7 sites)
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M001","เมกาโฮม-รังสิต",9,13252.90],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M004","เมกาโฮม-บ่อวิน",10,12621.46],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M006","เมกาโฮม-มีนบุรี",1,1566.71],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M008","เมกาโฮม-โรจนะ",7,10643.11],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M010","เมกาโฮม-นครราชสีมา",20,30222.64],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","M022","เมกาโฮม-เชียงใหม่",8,9824.00],
+      ["1132470","สายยางใส2\" หนา 1.5 มม. 30 เมตรพญานาค","S023","หัวหิน",4,6577.87],
+
+      // 1132473: สายยางเขียว5/8"10M.พญานาค (7 sites)
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","M002","เมกาโฮม-แม่สอด",15,1242.98],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","M004","เมกาโฮม-บ่อวิน",12,1012.62],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",10,821.48],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",5,393.72],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","M022","เมกาโฮม-เชียงใหม่",1,84.67],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","S028","อุดรธานี",20,1754.55],
+      ["1132473","สายยางเขียว5/8\"10M.พญานาค","S110","ระยอง (ทับมา)",22,1790.03],
+
+      // 1132492: สายยางใส3/4" หนา 1.5 มม.100 เมตรพญานาค (16 sites)
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M002","เมกาโฮม-แม่สอด",6,7996.52],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M004","เมกาโฮม-บ่อวิน",5,6021.72],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M005","เมกาโฮม-กบินทร์บุรี",6,6444.45],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M008","เมกาโฮม-โรจนะ",7,7608.34],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M009","เมกาโฮม-หาดใหญ่",3,4030.32],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M013","เมกาโฮม บ้านฉาง",5,6260.87],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M014","เมกาโฮม-บางนาตราด",6,6320.13],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M015","เมกาโฮม-พัทยา",4,5373.76],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M021","เมกาโฮม-นครปฐม",6,8060.64],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M024","เมกาโฮม-ปลวกแดง",15,19027.12],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M025","เมกาโฮม-ทุ่งสง",6,7441.94],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","M026","เมกาโฮม-เวียงสระ",6,7369.68],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","S039","ลำลูกกา",9,12090.96],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","S044","สุพรรณบุรี",6,8049.95],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","S073","ศรีราชา",6,6284.13],
+      ["1132492","สายยางใส3/4\" หนา 1.5 มม.100 เมตรพญานาค","S108","ภูเก็ต (เจ้าฟ้า)",5,5882.12],
+
+      // 1132493: สายยางใส1/2"20M.พญานาค (29 sites)
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",9,1119.60],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",6,741.54],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",6,740.90],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M006","เมกาโฮม-มีนบุรี",2,244.47],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",19,2331.59],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M008","เมกาโฮม-โรจนะ",19,2298.16],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M010","เมกาโฮม-นครราชสีมา",6,728.78],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M011","เมกาโฮม-นครพนม",10,1188.20],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M013","เมกาโฮม บ้านฉาง",14,1684.34],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M014","เมกาโฮม-บางนาตราด",3,350.53],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M015","เมกาโฮม-พัทยา",2,248.14],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M016","เมกาโฮม-ฉะเชิงเทรา",6,686.54],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M017","เมกาโฮม-สุราษฎร์ธานี",6,728.25],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M019","เมกาโฮม-บางพลี",8,983.21],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M020","เมกาโฮม-ติวานนท์",3,343.88],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M021","เมกาโฮม-นครปฐม",6,609.46],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M022","เมกาโฮม-เชียงใหม่",7,833.64],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M023","เมกาโฮม-บางแสน",9,1055.61],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M024","เมกาโฮม-ปลวกแดง",8,992.36],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M025","เมกาโฮม-ทุ่งสง",20,2476.28],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","M026","เมกาโฮม-เวียงสระ",10,1235.91],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S027","ขอนแก่น",6,720.68],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S028","อุดรธานี",9,1099.22],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S039","ลำลูกกา",30,3731.70],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S044","สุพรรณบุรี",8,995.07],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S073","ศรีราชา",8,933.96],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S083","พระราม 3",1,119.65],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S110","ระยอง (ทับมา)",15,1803.54],
+      ["1132493","สายยางใส1/2\"20M.พญานาค","S115","พุทธมณฑล สาย4",5,622.00],
+
+      // 1132505: สายยางใส3/4"20M.พญานาค (2 sites)
+      ["1132505","สายยางใส3/4\"20M.พญานาค","M001","เมกาโฮม-รังสิต",5,1240.28],
+      ["1132505","สายยางใส3/4\"20M.พญานาค","M021","เมกาโฮม-นครปฐม",11,2736.69],
+
+      // 1132522: สายยางใส5/8" หนา 1.5 มม.100 เมตรพญานาค (11 sites)
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M001","เมกาโฮม-รังสิต",7,6582.48],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M003","เมกาโฮม-หนองคาย",5,4201.82],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M005","เมกาโฮม-กบินทร์บุรี",12,11946.93],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M007","เมกาโฮม-อรัญประเทศ",1,969.76],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M008","เมกาโฮม-โรจนะ",3,2793.32],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M009","เมกาโฮม-หาดใหญ่",5,4844.68],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M010","เมกาโฮม-นครราชสีมา",3,2552.59],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M011","เมกาโฮม-นครพนม",6,5748.13],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M015","เมกาโฮม-พัทยา",12,11370.17],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","M026","เมกาโฮม-เวียงสระ",6,5751.21],
+      ["1132522","สายยางใส5/8\" หนา 1.5 มม.100 เมตรพญานาค","S039","ลำลูกกา",8,8060.64],
+
+      // 1132525: สายยางเขียว1"10M.พญานาค (14 sites)
+      ["1132525","สายยางเขียว1\"10M.พญานาค","DC02","สาขาวังน้อย",1,118.03],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M002","เมกาโฮม-แม่สอด",21,2680.26],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M003","เมกาโฮม-หนองคาย",1,132.98],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M004","เมกาโฮม-บ่อวิน",10,1297.75],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",2,260.36],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M006","เมกาโฮม-มีนบุรี",-1,-118.06],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M008","เมกาโฮม-โรจนะ",2,244.94],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M010","เมกาโฮม-นครราชสีมา",4,492.09],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M011","เมกาโฮม-นครพนม",12,1561.61],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M021","เมกาโฮม-นครปฐม",10,1329.80],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","M022","เมกาโฮม-เชียงใหม่",4,463.06],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","S028","อุดรธานี",9,1161.85],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","S065","เชียงราย",11,1462.78],
+      ["1132525","สายยางเขียว1\"10M.พญานาค","S113","แม่สาย",9,1117.48],
+
+      // 1132551: สายยางใส1 1/4" หนา 1.5 มม.50 เมตรพญานาค (4 sites)
+      ["1132551","สายยางใส1 1/4\" หนา 1.5 มม.50 เมตรพญานาค","M001","เมกาโฮม-รังสิต",3,2990.17],
+      ["1132551","สายยางใส1 1/4\" หนา 1.5 มม.50 เมตรพญานาค","M006","เมกาโฮม-มีนบุรี",8,7345.67],
+      ["1132551","สายยางใส1 1/4\" หนา 1.5 มม.50 เมตรพญานาค","M021","เมกาโฮม-นครปฐม",7,7053.06],
+      ["1132551","สายยางใส1 1/4\" หนา 1.5 มม.50 เมตรพญานาค","M022","เมกาโฮม-เชียงใหม่",7,6951.69],
+
+      // 1132552: สายยางเขียว3/4"10M.พญานาค (6 sites)
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","M001","เมกาโฮม-รังสิต",3,312.81],
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","M004","เมกาโฮม-บ่อวิน",13,1379.48],
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",13,1307.72],
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","S028","อุดรธานี",12,1226.32],
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","S065","เชียงราย",13,1435.59],
+      ["1132552","สายยางเขียว3/4\"10M.พญานาค","S110","ระยอง (ทับมา)",23,2388.68],
+
+      // 1132553: สายยางเขียว1/2"10M.พญานาค (9 sites)
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M001","เมกาโฮม-รังสิต",2,127.64],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M002","เมกาโฮม-แม่สอด",8,493.30],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M004","เมกาโฮม-บ่อวิน",2,128.77],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",13,818.35],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M008","เมกาโฮม-โรจนะ",20,1226.75],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","M010","เมกาโฮม-นครราชสีมา",8,471.43],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","S028","อุดรธานี",15,959.53],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","S065","เชียงราย",13,864.24],
+      ["1132553","สายยางเขียว1/2\"10M.พญานาค","S110","ระยอง (ทับมา)",6,350.19],
+
+      // 1132554: สายยางเขียว5/8" หนา1.7 มม.100ม.พญานาค (4 sites)
+      ["1132554","สายยางเขียว5/8\" หนา1.7 มม.100ม.พญานาค","M002","เมกาโฮม-แม่สอด",15,12324.82],
+      ["1132554","สายยางเขียว5/8\" หนา1.7 มม.100ม.พญานาค","M004","เมกาโฮม-บ่อวิน",4,3178.82],
+      ["1132554","สายยางเขียว5/8\" หนา1.7 มม.100ม.พญานาค","M008","เมกาโฮม-โรจนะ",8,6573.81],
+      ["1132554","สายยางเขียว5/8\" หนา1.7 มม.100ม.พญานาค","S113","แม่สาย",7,5412.34],
+
+      // 1132561: สายยางใส1" หนา 1.5 มม.100 เมตรพญานาค (19 sites)
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","DC02","สาขาวังน้อย",25,41982.25],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M002","เมกาโฮม-แม่สอด",8,12141.02],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M003","เมกาโฮม-หนองคาย",7,10525.59],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M005","เมกาโฮม-กบินทร์บุรี",1,1508.65],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M006","เมกาโฮม-มีนบุรี",1,1320.62],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M013","เมกาโฮม บ้านฉาง",3,4322.32],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M014","เมกาโฮม-บางนาตราด",2,2741.49],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M015","เมกาโฮม-พัทยา",4,6345.76],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M017","เมกาโฮม-สุราษฎร์ธานี",6,9102.54],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M019","เมกาโฮม-บางพลี",15,25189.35],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M020","เมกาโฮม-ติวานนท์",5,7945.29],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M023","เมกาโฮม-บางแสน",5,7126.52],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M024","เมกาโฮม-ปลวกแดง",5,7333.72],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M025","เมกาโฮม-ทุ่งสง",8,11468.78],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","M026","เมกาโฮม-เวียงสระ",2,3358.58],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","S044","สุพรรณบุรี",6,10075.74],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","S056","ชุมพร",4,6717.16],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","S110","ระยอง (ทับมา)",8,10648.67],
+      ["1132561","สายยางใส1\" หนา 1.5 มม.100 เมตรพญานาค","S113","แม่สาย",3,4122.37],
+
+      // 1132571: สายยางใส3/4"10M.พญานาค (6 sites)
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M002","เมกาโฮม-แม่สอด",4,480.46],
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M004","เมกาโฮม-บ่อวิน",1,103.58],
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",4,480.85],
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M008","เมกาโฮม-โรจนะ",10,1179.75],
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M010","เมกาโฮม-นครราชสีมา",20,2382.98],
+      ["1132571","สายยางใส3/4\"10M.พญานาค","M011","เมกาโฮม-นครพนม",7,798.24],
+
+      // 1132572: สายยางเขียว3/4" หนา1.8 มม.100 ม.พญานาค (2 sites)
+      ["1132572","สายยางเขียว3/4\" หนา1.8 มม.100 ม.พญานาค","M004","เมกาโฮม-บ่อวิน",6,5803.57],
+      ["1132572","สายยางเขียว3/4\" หนา1.8 มม.100 ม.พญานาค","M006","เมกาโฮม-มีนบุรี",1,842.29],
+
+      // 1132573: สายยางเขียว5/8"20M.พญานาค (6 sites)
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",29,4893.67],
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",19,3183.73],
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",9,1593.47],
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M010","เมกาโฮม-นครราชสีมา",9,1550.88],
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M011","เมกาโฮม-นครพนม",17,2976.19],
+      ["1132573","สายยางเขียว5/8\"20M.พญานาค","M025","เมกาโฮม-ทุ่งสง",1,152.39],
+
+      // 1132574: สายยางเขียว1"20M.พญานาค (8 sites)
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M001","เมกาโฮม-รังสิต",5,1098.38],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",6,1591.40],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",16,4254.62],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",12,2723.16],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",18,4051.62],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M013","เมกาโฮม บ้านฉาง",17,3651.01],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M021","เมกาโฮม-นครปฐม",10,2541.25],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","M022","เมกาโฮม-เชียงใหม่",5,1081.52],
+      ["1132574","สายยางเขียว1\"20M.พญานาค","S028","อุดรธานี",9,2018.11],
+
+      // 1132837: สายยางใส 3" 30M.พญานาค (2 sites)
+      ["1132837","สายยางใส 3\" 30M.พญานาค","M001","เมกาโฮม-รังสิต",1,831.55],
+      ["1132837","สายยางใส 3\" 30M.พญานาค","M004","เมกาโฮม-บ่อวิน",6,5012.37],
+
+      // 1132849: สายยางเขียว3/4"20M.พญานาค (4 sites)
+      ["1132849","สายยางเขียว3/4\"20M.พญานาค","M001","เมกาโฮม-รังสิต",8,1703.35],
+      ["1132849","สายยางเขียว3/4\"20M.พญานาค","M003","เมกาโฮม-หนองคาย",6,1266.00],
+      ["1132849","สายยางเขียว3/4\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",10,2082.67],
+      ["1132849","สายยางเขียว3/4\"20M.พญานาค","M006","เมกาโฮม-มีนบุรี",3,650.53],
+
+      // 1132972: สายยางใส5/8"20M.พญานาค (8 sites)
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M001","เมกาโฮม-รังสิต",16,2581.67],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",7,1217.14],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M003","เมกาโฮม-หนองคาย",9,1467.05],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",0,0.00],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M008","เมกาโฮม-โรจนะ",7,1176.15],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M010","เมกาโฮม-นครราชสีมา",20,2977.87],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M011","เมกาโฮม-นครพนม",12,2053.80],
+      ["1132972","สายยางใส5/8\"20M.พญานาค","M025","เมกาโฮม-ทุ่งสง",-1,-165.43],
+
+      // 1133007: สายยางใส5/8"10M.พญานาค (16 sites)
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M002","เมกาโฮม-แม่สอด",5,429.21],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",8,729.90],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M006","เมกาโฮม-มีนบุรี",2,186.12],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M008","เมกาโฮม-โรจนะ",10,877.76],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M011","เมกาโฮม-นครพนม",14,1188.84],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M013","เมกาโฮม บ้านฉาง",8,726.43],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M016","เมกาโฮม-ฉะเชิงเทรา",19,1716.53],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M020","เมกาโฮม-ติวานนท์",10,896.68],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M021","เมกาโฮม-นครปฐม",2,171.42],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M022","เมกาโฮม-เชียงใหม่",17,1557.99],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M023","เมกาโฮม-บางแสน",6,543.15],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M024","เมกาโฮม-ปลวกแดง",1,92.21],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","M025","เมกาโฮม-ทุ่งสง",3,272.83],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","S027","ขอนแก่น",4,363.34],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","S073","ศรีราชา",8,734.68],
+      ["1133007","สายยางใส5/8\"10M.พญานาค","S108","ภูเก็ต (เจ้าฟ้า)",2,184.95],
+
+      // 1133114: สายยางม้วน PVC เขียว พญานาค 1" 100M CL (2 sites)
+      ["1133114","สายยางม้วน PVC เขียว พญานาค 1\" 100M CL","M001","เมกาโฮม-รังสิต",6,7098.22],
+      ["1133114","สายยางม้วน PVC เขียว พญานาค 1\" 100M CL","M002","เมกาโฮม-แม่สอด",12,14227.38],
+
+      // 1133267: สายยางเขียว1/2"20M.พญานาค (13 sites)
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","DC02","สาขาวังน้อย",5,660.19],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",6,698.09],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M003","เมกาโฮม-หนองคาย",13,1701.89],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",7,899.21],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",9,1172.94],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M008","เมกาโฮม-โรจนะ",14,1861.72],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M010","เมกาโฮม-นครราชสีมา",12,1504.72],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M011","เมกาโฮม-นครพนม",11,1409.54],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","M014","เมกาโฮม-บางนาตราด",1,132.04],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","S028","อุดรธานี",2,238.88],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","S073","ศรีราชา",11,1391.06],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","S110","ระยอง (ทับมา)",11,1414.51],
+      ["1133267","สายยางเขียว1/2\"20M.พญานาค","S113","แม่สาย",10,1157.62],
+
+      // 1145498: สายยางใส1"20M.พญานาค (28 sites)
+      ["1145498","สายยางใส1\"20M.พญานาค","M002","เมกาโฮม-แม่สอด",160,2474.75],
+      ["1145498","สายยางใส1\"20M.พญานาค","M003","เมกาโฮม-หนองคาย",200,3039.10],
+      ["1145498","สายยางใส1\"20M.พญานาค","M004","เมกาโฮม-บ่อวิน",115,1784.21],
+      ["1145498","สายยางใส1\"20M.พญานาค","M006","เมกาโฮม-มีนบุรี",-5,-77.55],
+      ["1145498","สายยางใส1\"20M.พญานาค","M007","เมกาโฮม-อรัญประเทศ",-324,-4902.12],
+      ["1145498","สายยางใส1\"20M.พญานาค","M008","เมกาโฮม-โรจนะ",300,4396.67],
+      ["1145498","สายยางใส1\"20M.พญานาค","M010","เมกาโฮม-นครราชสีมา",20,299.76],
+      ["1145498","สายยางใส1\"20M.พญานาค","M011","เมกาโฮม-นครพนม",80,1203.57],
+      ["1145498","สายยางใส1\"20M.พญานาค","M013","เมกาโฮม บ้านฉาง",20,309.75],
+      ["1145498","สายยางใส1\"20M.พญานาค","M014","เมกาโฮม-บางนาตราด",60,895.20],
+      ["1145498","สายยางใส1\"20M.พญานาค","M016","เมกาโฮม-ฉะเชิงเทรา",-160,-2422.40],
+      ["1145498","สายยางใส1\"20M.พญานาค","M017","เมกาโฮม-สุราษฎร์ธานี",280,4278.25],
+      ["1145498","สายยางใส1\"20M.พญานาค","M018","เมกาโฮม-รัตนาธิเบศร์",-40,-611.60],
+      ["1145498","สายยางใส1\"20M.พญานาค","M020","เมกาโฮม-ติวานนท์",-240,-3648.00],
+      ["1145498","สายยางใส1\"20M.พญานาค","M021","เมกาโฮม-นครปฐม",20,306.06],
+      ["1145498","สายยางใส1\"20M.พญานาค","M022","เมกาโฮม-เชียงใหม่",160,1986.40],
+      ["1145498","สายยางใส1\"20M.พญานาค","M023","เมกาโฮม-บางแสน",0,0.00],
+      ["1145498","สายยางใส1\"20M.พญานาค","M024","เมกาโฮม-ปลวกแดง",140,2174.20],
+      ["1145498","สายยางใส1\"20M.พญานาค","M025","เมกาโฮม-ทุ่งสง",110,1709.89],
+      ["1145498","สายยางใส1\"20M.พญานาค","M026","เมกาโฮม-เวียงสระ",63,979.19],
+      ["1145498","สายยางใส1\"20M.พญานาค","S027","ขอนแก่น",20,306.16],
+      ["1145498","สายยางใส1\"20M.พญานาค","S028","อุดรธานี",171,2526.92],
+      ["1145498","สายยางใส1\"20M.พญานาค","S039","ลำลูกกา",120,1864.80],
+      ["1145498","สายยางใส1\"20M.พญานาค","S065","เชียงราย",40,622.00],
+      ["1145498","สายยางใส1\"20M.พญานาค","S073","ศรีราชา",180,2668.43],
+      ["1145498","สายยางใส1\"20M.พญานาค","S108","ภูเก็ต (เจ้าฟ้า)",79,1228.10],
+      ["1145498","สายยางใส1\"20M.พญานาค","S110","ระยอง (ทับมา)",-228,-3488.40],
+      ["1145498","สายยางใส1\"20M.พญานาค","S113","แม่สาย",65,993.46],
+
+      // 1145575: สายยางม้วน PVC ใส พญานาค 5/16" 100M CL (11 sites)
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M001","เมกาโฮม-รังสิต",365.3,1246.38],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M004","เมกาโฮม-บ่อวิน",512,1657.65],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M005","เมกาโฮม-กบินทร์บุรี",52,160.85],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M006","เมกาโฮม-มีนบุรี",265,891.56],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M007","เมกาโฮม-อรัญประเทศ",206,634.63],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","M012","เมกาโฮม-เชียงราย",700,2167.23],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","S028","อุดรธานี",900,3005.01],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","S065","เชียงราย",300,1070.13],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","S109","ลำพูน",279,823.05],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","S111","เชียงใหม่ (รวมโชค)",119,351.05],
+      ["1145575","สายยางม้วน PVC ใส พญานาค 5/16\" 100M CL","S113","แม่สาย",100,318.05],
+
+      // 1145576: สายยางเขียว1/2" หนา1.6 มม.100 ม.พญานาค (7 sites)
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M001","เมกาโฮม-รังสิต",308.11,1920.96],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M003","เมกาโฮม-หนองคาย",500,2964.95],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M004","เมกาโฮม-บ่อวิน",62,365.50],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M005","เมกาโฮม-กบินทร์บุรี",253,1572.73],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M006","เมกาโฮม-มีนบุรี",173,983.10],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","M007","เมกาโฮม-อรัญประเทศ",0,0.00],
+      ["1145576","สายยางเขียว1/2\" หนา1.6 มม.100 ม.พญานาค","S065","เชียงราย",500,3115.75],
+
+      // 1145588: สายยางใส2" หนา0.6 มม. แบน30 เมตรพญานาค (8 sites)
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M004","เมกาโฮม-บ่อวิน",90,1428.29],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M005","เมกาโฮม-กบินทร์บุรี",177,3089.60],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M006","เมกาโฮม-มีนบุรี",-6,-103.56],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M007","เมกาโฮม-อรัญประเทศ",390,6250.74],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M015","เมกาโฮม-พัทยา",150,2939.79],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M022","เมกาโฮม-เชียงใหม่",210,3896.64],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","M026","เมกาโฮม-เวียงสระ",210,4115.76],
+      ["1145588","สายยางใส2\" หนา0.6 มม. แบน30 เมตรพญานาค","S044","สุพรรณบุรี",150,2939.79],
+
+      // 1145609: สายยางม้วน PVC ใส พญานาค 1/4" CL 100m (10 sites)
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M001","เมกาโฮม-รังสิต",206.15,501.98],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M004","เมกาโฮม-บ่อวิน",366,955.57],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M005","เมกาโฮม-กบินทร์บุรี",308,826.10],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M006","เมกาโฮม-มีนบุรี",98,264.33],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M010","เมกาโฮม-นครราชสีมา",400,1139.44],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","M013","เมกาโฮม บ้านฉาง",300,724.70],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","S028","อุดรธานี",299,875.35],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","S065","เชียงราย",600,1756.92],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","S111","เชียงใหม่ (รวมโชค)",198,492.23],
+      ["1145609","สายยางม้วน PVC ใส พญานาค 1/4\" CL 100m","S113","แม่สาย",100,258.72],
+
+      // 1145619: สายยางใส1/2" หนา 1.4 มม.100 เมตรพญานาค (9 sites)
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M001","เมกาโฮม-รังสิต",600,2490.94],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M004","เมกาโฮม-บ่อวิน",76,321.09],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M005","เมกาโฮม-กบินทร์บุรี",331,2217.05],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M006","เมกาโฮม-มีนบุรี",265,1706.05],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M007","เมกาโฮม-อรัญประเทศ",57,295.83],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M009","เมกาโฮม-หาดใหญ่",300,2014.04],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M015","เมกาโฮม-พัทยา",600,3531.56],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","M026","เมกาโฮม-เวียงสระ",-91,-611.52],
+      ["1145619","สายยางใส1/2\" หนา 1.4 มม.100 เมตรพญานาค","S044","สุพรรณบุรี",300,2015.16],
+
+      // 1145637: สายยางใส 1 1/2" หนา 2มม.x 50เมตร พญานาค (7 sites)
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M001","เมกาโฮม-รังสิต",388.31,10070.63],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M002","เมกาโฮม-แม่สอด",150,3882.32],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M005","เมกาโฮม-กบินทร์บุรี",100,2549.58],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M006","เมกาโฮม-มีนบุรี",185,4957.14],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M013","เมกาโฮม บ้านฉาง",150,3629.26],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M021","เมกาโฮม-นครปฐม",262,6261.10],
+      ["1145637","สายยางใส 1 1/2\" หนา 2มม.x 50เมตร พญานาค","M022","เมกาโฮม-เชียงใหม่",150,3771.95],
+
+      // 1155877: สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4"x20M (5 sites)
+      ["1155877","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M","M001","เมกาโฮม-รังสิต",6,2519.17],
+      ["1155877","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M","M003","เมกาโฮม-หนองคาย",11,4080.38],
+      ["1155877","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M","M007","เมกาโฮม-อรัญประเทศ",0,0.00],
+      ["1155877","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M","M013","เมกาโฮม บ้านฉาง",9,3831.55],
+      ["1155877","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M","M014","เมกาโฮม-บางนาตราด",7,2722.16],
+
+      // 1155903: สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8"x20M (14 sites)
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M005","เมกาโฮม-กบินทร์บุรี",7,2087.78],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M006","เมกาโฮม-มีนบุรี",10,2853.20],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M008","เมกาโฮม-โรจนะ",8,2091.16],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M011","เมกาโฮม-นครพนม",9,2589.53],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M013","เมกาโฮม บ้านฉาง",12,3724.11],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M019","เมกาโฮม-บางพลี",8,2176.54],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M020","เมกาโฮม-ติวานนท์",6,1839.30],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M021","เมกาโฮม-นครปฐม",7,2076.00],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M022","เมกาโฮม-เชียงใหม่",8,2392.68],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M023","เมกาโฮม-บางแสน",4,1215.85],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M024","เมกาโฮม-ปลวกแดง",6,1837.78],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","M025","เมกาโฮม-ทุ่งสง",5,1568.54],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","S027","ขอนแก่น",11,3232.21],
+      ["1155903","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M","S108","ภูเก็ต (เจ้าฟ้า)",8,2244.89],
+
+      // 1155951: สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8"x10M (17 sites)
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M005","เมกาโฮม-กบินทร์บุรี",7,1108.44],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M006","เมกาโฮม-มีนบุรี",2,316.42],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M007","เมกาโฮม-อรัญประเทศ",4,618.85],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M008","เมกาโฮม-โรจนะ",26,3533.30],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M010","เมกาโฮม-นครราชสีมา",11,1714.10],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M011","เมกาโฮม-นครพนม",11,1598.76],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M013","เมกาโฮม บ้านฉาง",0,0.00],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M016","เมกาโฮม-ฉะเชิงเทรา",12,1882.60],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M017","เมกาโฮม-สุราษฎร์ธานี",17,2559.13],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M019","เมกาโฮม-บางพลี",9,1408.31],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M020","เมกาโฮม-ติวานนท์",19,2962.34],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M021","เมกาโฮม-นครปฐม",10,1583.90],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M022","เมกาโฮม-เชียงใหม่",14,2147.19],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M023","เมกาโฮม-บางแสน",9,1392.75],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M024","เมกาโฮม-ปลวกแดง",6,931.09],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","M025","เมกาโฮม-ทุ่งสง",8,1196.83],
+      ["1155951","สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M","S027","ขอนแก่น",10,1540.44],
+
+      // 1155961: สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4"x10M (4 sites)
+      ["1155961","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M","M001","เมกาโฮม-รังสิต",13,2353.19],
+      ["1155961","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M","M006","เมกาโฮม-มีนบุรี",3,627.13],
+      ["1155961","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M","M007","เมกาโฮม-อรัญประเทศ",17,3408.38],
+      ["1155961","สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M","M010","เมกาโฮม-นครราชสีมา",10,1835.85]
+    ];
+
+    const sheet5Data = sheet5Compact.map(r => ({
+      perioddate: "30/09/2026",
+      artno: r[0],
+      artdesc: r[1],
+      siteno: r[2],
+      sitename: r[3],
+      onhandqty: r[4],
+      onhandvalue: r[5]
+    }));
+
+    // Embedded sheets mapping for instant offline switching
+    const sheet4DataNormalized = sheet4Data.map(r => ({
+      perioddate: "15/09/2026",
+      ...r
+    }));
+
+    const embeddedSheets = {
+      '2010456650': sheet5Data, // Sheet 5 (30 ก.ย. 2026 - สิ้นเดือน)
+      '1943525185': sheet4DataNormalized  // Sheet 4 (15 ก.ย. 2026)
+    };
+
+    // Active dataset initialized to Sheet 5 (30 ก.ย. 2026)
+    let rawStockData = sheet5Data;
+
     let currentSort = { col: 'onhandvalue', desc: true };
     let filteredData = [...rawStockData];
+
+    // Master retail price mapping (แบรนด์ พญานาค 20 รายการ)
+    const priceMap = {
+      "1132525": 247,
+      "1132574": 497,
+      "1132553": 137,
+      "1133267": 247,
+      "1132552": 187,
+      "1132849": 397,
+      "1132473": 187,
+      "1132573": 397,
+      "1155961": 627,
+      "1155877": 1127,
+      "1155951": 447,
+      "1155903": 887,
+      "1132399": 277,
+      "1145498": 537,
+      "1132398": 127,
+      "1132493": 267,
+      "1132571": 257,
+      "1132505": 447,
+      "1133007": 197,
+      "1132972": 347
+    };
 
     function renderTable() {
       const tbody = document.getElementById('tableBody');
@@ -1096,13 +1680,18 @@
           branchFullName = branchFullName.replace(/^โฮมโปร[\s-]/, '');
         }
 
+        const retailPrice = priceMap[item.artno];
+        const retailPriceCell = retailPrice ? `฿${retailPrice.toLocaleString()}` : '<span class="text-slate-400 font-mono text-xs">-</span>';
+
         tr.innerHTML = `
-          <td class="py-3 px-4 font-mono font-medium text-slate-900">${item.artno}</td>
+          <td class="py-3 px-3 font-mono text-xs text-blue-900 font-semibold bg-blue-50/40">${item.perioddate || '30/09/2026'}</td>
+          <td class="py-3 px-3 font-mono font-medium text-slate-900">${item.artno}</td>
           <td class="py-3 px-4 text-slate-800 font-medium">${item.artdesc}</td>
-          <td class="py-3 px-4 text-slate-800 font-medium">${channelBadge}${branchFullName}</td>
-          <td class="py-3 px-4 text-right font-mono font-medium ${item.onhandqty < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}">${item.onhandqty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-3 text-slate-800 font-medium">${channelBadge}${branchFullName}</td>
+          <td class="py-3 px-3 text-right font-mono font-semibold text-indigo-950 bg-indigo-50/30">${retailPriceCell}</td>
+          <td class="py-3 px-3 text-right font-mono font-medium ${item.onhandqty < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}">${item.onhandqty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
           <td class="py-3 px-4 text-right font-mono font-semibold ${item.onhandvalue < 0 ? 'text-red-600 font-bold' : 'text-slate-900'}">฿${item.onhandvalue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-          <td class="py-3 px-4 text-center">${statusBadge}</td>
+          <td class="py-3 px-3 text-center">${statusBadge}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -1180,6 +1769,11 @@
 
     function doSort() {
       filteredData.sort((a, b) => {
+        if (currentSort.col === 'retailPrice') {
+          let valA = priceMap[a.artno] ? priceMap[a.artno] : -1;
+          let valB = priceMap[b.artno] ? priceMap[b.artno] : -1;
+          return currentSort.desc ? valB - valA : valA - valB;
+        }
         let valA = a[currentSort.col];
         let valB = b[currentSort.col];
         if (typeof valA === 'string') {
@@ -1190,7 +1784,7 @@
     }
 
     function exportToCSV() {
-      let csvContent = "\uFEFFรหัสสินค้า (ARTNO),ชื่อรายการสินค้าเต็ม (ARTDESC),ชื่อสาขาเต็ม (SITENAME),จำนวนคงเหลือ (ONHANDQTY),มูลค่าราคาเต็ม (ONHANDVALUE)\n";
+      let csvContent = "\uFEFFPERIODDATE,ARTNO,ARTDESC,SITENAME,ONHANDQTY,ONHANDVALUE,RETAIL_PRICE\n";
       filteredData.forEach(r => {
         let branchFullName = r.sitename;
         if (r.siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
@@ -1198,139 +1792,1051 @@
         } else if (r.siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
           branchFullName = 'คลังศูนย์กระจายสินค้า ' + branchFullName;
         }
-        csvContent += `"${r.artno}","${r.artdesc.replace(/"/g, '""')}","${branchFullName.replace(/"/g, '""')}",${r.onhandqty},${r.onhandvalue.toFixed(2)}\n`;
+        const pPrice = priceMap[r.artno] || '';
+        csvContent += `"${r.perioddate || '30/09/2026'}","${r.artno}","${r.artdesc.replace(/"/g, '""')}","${branchFullName.replace(/"/g, '""')}",${r.onhandqty},${r.onhandvalue.toFixed(2)},"${pPrice}"\n`;
       });
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `Stock_Phayanak_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `Stock_PTI_30_9_2026_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    // Initialize Charts
-    window.addEventListener('DOMContentLoaded', () => {
+    // Chart instances
+    let categoryChartInstance = null;
+    let trendChartInstance = null;
+    let branchChartInstance = null;
+
+    // Render / Update Visual Infographic Charts
+    function renderCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap) {
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js is not loaded');
+        return;
+      }
+
+      // 1. Category Chart (Doughnut)
+      const catCanvas = document.getElementById('categoryChart');
+      if (catCanvas) {
+        if (categoryChartInstance) {
+          categoryChartInstance.destroy();
+        }
+        categoryChartInstance = new Chart(catCanvas.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: ['สายยางใส', 'สายยางเขียว', 'สายยางเด้ง ฟ้ามัน', 'สายยางม้วน PVC'],
+            datasets: [{
+              data: [clearVal, greenVal, elasticVal, rollVal],
+              backgroundColor: ['#2563eb', '#10b981', '#0284c7', '#f59e0b'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: { 
+                position: 'bottom', 
+                labels: { 
+                  font: { family: 'Sarabun', size: 11, weight: '500' },
+                  boxWidth: 12,
+                  padding: 12
+                } 
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${totalVal > 0 ? ((ctx.raw/totalVal)*100).toFixed(1) : 0}%)`
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Trend Chart (Line)
+      const trendCanvas = document.getElementById('trendChart');
+      if (trendCanvas) {
+        if (trendChartInstance) {
+          trendChartInstance.destroy();
+        }
+
+        let trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26', '30 ก.ย. 26'];
+        let trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02, 898891.35];
+
+        const selGid = document.getElementById('sheetSelector') ? document.getElementById('sheetSelector').value : '';
+        if (selGid === 'import_7_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('10/2026'))) {
+          trendLabels.push('07 ต.ค. 26');
+          trendData.push(totalVal);
+        } else if (selGid === '1943525185') {
+          trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26'];
+          trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02];
+        }
+
+        trendChartInstance = new Chart(trendCanvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: trendLabels,
+            datasets: [{
+              label: 'มูลค่าสต็อกคงเหลือ (บาท)',
+              data: trendData,
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.12)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 5,
+              pointBackgroundColor: '#1d4ed8',
+              pointHoverRadius: 7
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                }
+              }
+            },
+            scales: {
+              y: {
+                ticks: { 
+                  callback: (v) => '฿' + (v >= 1000000 ? (v/1000000).toFixed(2) + 'M' : (v/1000).toFixed(0) + 'k'),
+                  font: { family: 'Sarabun', size: 10 }
+                },
+                grid: { color: 'rgba(226, 232, 240, 0.6)' }
+              },
+              x: {
+                ticks: { font: { family: 'Sarabun', size: 10 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      }
+
+      // 3. Branch Chart (Horizontal Bar)
+      const branchCanvas = document.getElementById('branchChart');
+      if (branchCanvas) {
+        if (branchChartInstance) {
+          branchChartInstance.destroy();
+        }
+        const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+        branchChartInstance = new Chart(branchCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: sortedBranches.map(b => b[0].length > 18 ? b[0].slice(0,18)+'..' : b[0]),
+            datasets: [{
+              label: 'มูลค่าสต็อก (บาท)',
+              data: sortedBranches.map(b => b[1]),
+              backgroundColor: '#4f46e5',
+              hoverBackgroundColor: '#4338ca',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { 
+                  callback: (v) => '฿' + (v/1000).toFixed(0) + 'k',
+                  font: { family: 'Sarabun', size: 10 }
+                },
+                grid: { color: 'rgba(226, 232, 240, 0.6)' }
+              },
+              y: {
+                ticks: { font: { family: 'Sarabun', size: 10, weight: '500' } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Render Top 10 SKUs Pareto Table
+    function renderTop10Table(skuMap, totalVal) {
+      const tbody = document.getElementById('top10Tbody');
+      if (!tbody) return;
+
+      const sortedSKUs = Object.values(skuMap).sort((a, b) => b.val - a.val).slice(0, 10);
+      if (sortedSKUs.length === 0) return;
+
+      tbody.innerHTML = '';
+      let top10Val = 0;
+
+      const medals = ['🥇 1', '🥈 2', '🥉 3', '4', '5', '6', '7', '8', '9', '10'];
+      const priorities = [
+        '<span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูงสุด</span>',
+        '<span class="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-bold rounded">ทุนจมสูง</span>',
+        '<span class="px-2 py-0.5 bg-orange-100 text-orange-800 text-xs font-semibold rounded">ระบายด่วน</span>',
+        '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดมาตรฐาน</span>',
+        '<span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">งานช่าง/เกษตร</span>',
+        '<span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">เกษตร/สูบน้ำ</span>',
+        '<span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-semibold rounded">ขนาดใช้ในบ้าน</span>',
+        '<span class="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded">เกรดพรีเมียม</span>',
+        '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-semibold rounded">ขายดี</span>',
+        '<span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded">ม้วนใหญ่</span>'
+      ];
+
+      sortedSKUs.forEach((item, idx) => {
+        top10Val += item.val;
+        const pct = totalVal > 0 ? ((item.val / totalVal) * 100).toFixed(2) : '0.00';
+        const tr = document.createElement('tr');
+        tr.className = idx === 0 ? "hover:bg-amber-50/30 bg-amber-50/10 transition" : "hover:bg-slate-50 transition";
+        const rankColor = idx === 0 ? "font-bold text-amber-600" : (idx === 1 ? "font-bold text-slate-500" : (idx === 2 ? "font-bold text-amber-700" : "font-bold text-slate-400"));
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-center ${rankColor}">${medals[idx] || (idx + 1)}</td>
+          <td class="py-3 px-4 font-mono font-bold text-slate-900">${item.artno}</td>
+          <td class="py-3 px-4 font-semibold text-slate-800">${item.artdesc}</td>
+          <td class="py-3 px-4 text-right font-mono font-medium">${item.qty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-4 text-right font-mono font-bold text-blue-900 bg-amber-50/50">฿${item.val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-4 text-center font-mono font-semibold text-indigo-700">${pct}%</td>
+          <td class="py-3 px-4 text-center">${priorities[idx] || '<span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded">ทั่วไป</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const top10Pct = totalVal > 0 ? ((top10Val / totalVal) * 100).toFixed(1) : 0;
+      const subtotalBadge = document.getElementById('top10SubtotalBadge');
+      if (subtotalBadge) {
+        subtotalBadge.textContent = `มูลค่ารวม Top 10: ฿${Math.round(top10Val).toLocaleString()} (${top10Pct}%)`;
+      }
+      const summaryText = document.getElementById('top10SummaryText');
+      if (summaryText) {
+        summaryText.innerHTML = `10 รายการนี้ครองมูลค่ารวม <strong>฿${top10Val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${top10Pct}%)</strong> ของสต็อกทั้งหมด ควรเน้นทำแคมเปญระบายสต็อกในกลุ่มนี้เป็นอันดับแรก`;
+      }
+    }
+
+    // Master Dashboard Update Engine (Updates KPIs, Infographics & Tables)
+    function updateDashboard(data) {
+      if (!Array.isArray(data) || data.length === 0) return;
+      rawStockData = data;
+      filteredData = [...rawStockData];
+
+      let totalVal = 0;
+      let totalQty = 0;
+      let availableQty = 0;
+      let availableVal = 0;
+      let negCount = 0;
+      let negVal = 0;
+      const skuSet = new Set();
+      const siteSet = new Set();
+      let dcCount = 0;
+      let megaCount = 0;
+      let hpCount = 0;
+      const siteChannelMap = {};
+
+      let clearVal = 0;
+      let greenVal = 0;
+      let elasticVal = 0;
+      let rollVal = 0;
+
+      const branchMap = {};
+      const skuMap = {};
+
+      rawStockData.forEach(item => {
+        const val = typeof item.onhandvalue === 'number' ? item.onhandvalue : (parseFloat(item.onhandvalue) || 0);
+        const qty = typeof item.onhandqty === 'number' ? item.onhandqty : (parseFloat(item.onhandqty) || 0);
+        const artno = String(item.artno || '').trim();
+        const desc = String(item.artdesc || '').trim();
+        const siteno = String(item.siteno || '').trim();
+        const sitename = String(item.sitename || '').trim();
+
+        totalVal += val;
+        totalQty += qty;
+
+        if (qty > 0) {
+          availableQty += qty;
+          availableVal += val;
+        } else if (qty < 0) {
+          negCount++;
+          negVal += val;
+        }
+
+        if (artno) skuSet.add(artno);
+        const siteKey = siteno || sitename;
+        if (siteKey && !siteChannelMap[siteKey]) {
+          siteSet.add(siteKey);
+          siteChannelMap[siteKey] = true;
+          if (siteno.startsWith('DC') || sitename.includes('วังน้อย') || sitename.includes('คลัง')) dcCount++;
+          else if (siteno.startsWith('M') || sitename.includes('เมกาโฮม')) megaCount++;
+          else if (siteno.startsWith('S') || sitename.includes('โฮมโปร')) hpCount++;
+          else megaCount++;
+        }
+
+        // Category breakdown
+        if (desc.includes('สายยางใส')) clearVal += val;
+        else if (desc.includes('สายยางเขียว')) greenVal += val;
+        else if (desc.includes('สายยางเด้ง')) elasticVal += val;
+        else rollVal += val;
+
+        // Branch breakdown
+        let branchLabel = sitename || siteno;
+        if (siteno.startsWith('M')) branchLabel = 'เมกาโฮม-' + branchLabel.replace(/^เมกาโฮม[\s-]/, '');
+        else if (siteno.startsWith('S')) branchLabel = 'โฮมโปร-' + branchLabel.replace(/^โฮมโปร[\s-]/, '');
+        else if (siteno.startsWith('DC')) branchLabel = 'คลังวังน้อย ' + branchLabel.replace(/^คลัง[\s-]/, '');
+        branchMap[branchLabel] = (branchMap[branchLabel] || 0) + val;
+
+        // SKU breakdown for Top 10
+        if (artno) {
+          if (!skuMap[artno]) {
+            skuMap[artno] = { artno: artno, artdesc: desc, qty: 0, val: 0 };
+          }
+          skuMap[artno].qty += qty;
+          skuMap[artno].val += val;
+        }
+      });
+
+      // Update KPI Metric Cards
+      const elVal = document.getElementById('kpi-total-val');
+      if (elVal) elVal.textContent = `฿${totalVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const elQty = document.getElementById('kpi-total-qty');
+      if (elQty) elQty.textContent = Math.round(totalQty).toLocaleString();
+
+      const elAvail = document.getElementById('kpi-available-qty');
+      if (elAvail) elAvail.textContent = `${Math.round(availableQty).toLocaleString()} ม้วน (฿${Math.round(availableVal).toLocaleString()})`;
+
+      const elSubtext = document.getElementById('kpi-decrease-subtext');
+      if (elSubtext) {
+        const baseJuneVal = 1417737.42;
+        const diffPct = ((baseJuneVal - totalVal) / baseJuneVal) * 100;
+        elSubtext.innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1">📉 ลดลง ${diffPct.toFixed(2)}%</span><span class="ml-1">จาก มิ.ย. (฿1,417,737.42) ระบายสต็อกต่อเนื่อง</span>`;
+      }
+
+      const elSku = document.getElementById('kpi-total-sku');
+      if (elSku) elSku.textContent = skuSet.size;
+
+      const elSites = document.getElementById('kpi-total-sites');
+      if (elSites) elSites.textContent = siteSet.size;
+
+      const elChannel = document.getElementById('kpi-channel-breakdown');
+      if (elChannel) {
+        elChannel.innerHTML = `
+          <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-medium">DC ${dcCount}</span>
+          <span class="px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-medium">Mega Home ${megaCount}</span>
+          <span class="px-1.5 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">HomePro ${hpCount}</span>
+        `;
+      }
+
+      const elNegCount = document.getElementById('kpi-neg-count');
+      if (elNegCount) elNegCount.textContent = negCount;
+
+      const elNegVal = document.getElementById('kpi-neg-val');
+      if (elNegVal) elNegVal.textContent = `-฿${Math.abs(negVal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      // Update Visual Infographics & Charts
+      renderCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap);
+
+      // Update Top 10 SKUs Pareto table
+      renderTop10Table(skuMap, totalVal);
+
+      // Re-apply filters and render main table
       doSort();
       renderTable();
+    }
 
-      // Category Calculation
-      let clearVal = 0, greenVal = 0, elasticVal = 0, rollVal = 0;
-      rawStockData.forEach(r => {
-        if (r.artdesc.includes('สายยางใส')) clearVal += r.onhandvalue;
-        else if (r.artdesc.includes('สายยางเขียว')) greenVal += r.onhandvalue;
-        else if (r.artdesc.includes('สายยางเด้ง')) elasticVal += r.onhandvalue;
-        else rollVal += r.onhandvalue;
+    const GOOGLE_SHEET_BASE = 'https://docs.google.com/spreadsheets/d/1qvSzyD4ZsR2d4j9l_c9X6vKKE4CMTMCNmSsEcrMlCZM';
+
+    function parseCSV(text) {
+      const lines = [];
+      let row = [""];
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i+1];
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push('');
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') i++;
+          lines.push(row);
+          row = [''];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+      if (row.length > 1 || row[0] !== '') lines.push(row);
+      return lines;
+    }
+
+    function parseGoogleSheetCSV(text, defaultDate = '30/09/2026') {
+      const rows = parseCSV(text);
+      if (rows.length < 2) return [];
+
+      let artnoIdx = -1, artdescIdx = -1, sitenoIdx = -1, sitenameIdx = -1, onhandqtyIdx = -1, onhandvalueIdx = -1, perioddateIdx = -1;
+      let headerRowIdx = -1;
+
+      for (let r = 0; r < Math.min(30, rows.length); r++) {
+        const row = rows[r];
+        row.forEach((col, idx) => {
+          const c = String(col || '').trim().toUpperCase().replace(/[\s_.-]/g, '');
+          if (c.includes('PERIODDATE') || c.includes('CRDATE') || c.includes('DOCDATE') || c.includes('วันที่')) perioddateIdx = idx;
+          else if (c.includes('ARTNO') || c.includes('ARTICLE') || c.includes('MATERIAL') || c.includes('รหัสสินค้า') || c.includes('SKU')) artnoIdx = idx;
+          else if (c.includes('ARTDESC') || c.includes('DESCRIPTION') || c.includes('MAKTX') || c.includes('ชื่อสินค้า') || c.includes('รายการ')) artdescIdx = idx;
+          else if (c.includes('SITENO') || c.includes('STORENO') || c.includes('PLANT') || c.includes('รหัสสาขา') || c.includes('สาขา')) sitenoIdx = idx;
+          else if (c.includes('SITENAME') || c.includes('STORENAME') || c.includes('PLANTNAME') || c.includes('ชื่อสาขา')) sitenameIdx = idx;
+          else if (c.includes('ONHANDQTY') || c.includes('STOCKQTY') || c.includes('LABST') || c.includes('QTY') || c.includes('จำนวน')) onhandqtyIdx = idx;
+          else if (c.includes('ONHANDVALUE') || c.includes('STOCKVAL') || c.includes('SALESVAL') || c.includes('VAL') || c.includes('มูลค่า')) onhandvalueIdx = idx;
+        });
+        if (artnoIdx !== -1 && (artdescIdx !== -1 || sitenameIdx !== -1) && onhandqtyIdx !== -1) {
+          headerRowIdx = r;
+          break;
+        }
+      }
+
+      if (headerRowIdx === -1) return [];
+
+      const list = [];
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r];
+        let perioddate = perioddateIdx !== -1 ? String(row[perioddateIdx] || '').trim() : defaultDate;
+        if (!perioddate) perioddate = defaultDate;
+
+        let artno = String(row[artnoIdx] || '').trim();
+        if (artno.endsWith('.0')) artno = artno.slice(0, -2);
+        const artdesc = String(row[artdescIdx] || '').trim();
+        let siteno = sitenoIdx !== -1 ? String(row[sitenoIdx] || '').trim() : '';
+        if (siteno.endsWith('.0')) siteno = siteno.slice(0, -2);
+        const sitename = sitenameIdx !== -1 ? String(row[sitenameIdx] || '').trim() : '';
+        if (!siteno) {
+          if (sitename.includes('เมกาโฮม') || sitename.startsWith('M')) siteno = 'M000';
+          else if (sitename.includes('โฮมโปร') || sitename.startsWith('S')) siteno = 'S000';
+          else if (sitename.includes('วังน้อย') || sitename.includes('คลัง') || sitename.startsWith('DC')) siteno = 'DC02';
+          else siteno = 'S000';
+        }
+        const qtyStr = String(row[onhandqtyIdx] || '').replace(/,/g, '').trim();
+        const valStr = onhandvalueIdx !== -1 ? String(row[onhandvalueIdx] || '').replace(/,/g, '').trim() : '0';
+
+        if (artno && (!artdesc || artdesc.includes('พญานาค')) && !isNaN(parseFloat(qtyStr))) {
+          list.push({
+            perioddate: perioddate,
+            artno: artno,
+            artdesc: artdesc,
+            siteno: siteno,
+            sitename: sitename,
+            onhandqty: parseFloat(qtyStr),
+            onhandvalue: parseFloat(valStr) || 0
+          });
+        }
+      }
+      return list;
+    }
+
+    // 3. Offline CSV & Excel File Import Handler
+    function handleFileImport(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const fileName = file.name.toLowerCase();
+      const isExcel = fileName.endsWith('.xls') || fileName.endsWith('.xlsx');
+
+      // Auto-detect date from file name (e.g. Stock PTI 7_10_2026.xls -> 07/10/2026)
+      let detectedDate = '07/10/2026';
+      const mDate = file.name.match(/(\d{1,2})[_.-](\d{1,2})[_.-](\d{4})/);
+      if (mDate) {
+        detectedDate = `${mDate[1].padStart(2, '0')}/${mDate[2].padStart(2, '0')}/${mDate[3]}`;
+      }
+
+      const onDataParsed = (parsed) => {
+        if (parsed && parsed.length > 0) {
+          rawStockData = parsed;
+          const selector = document.getElementById('sheetSelector');
+          if (selector) {
+            let opt = selector.querySelector('option[value="imported_file"]');
+            if (!opt) {
+              opt = document.createElement('option');
+              opt.value = 'imported_file';
+              selector.prepend(opt);
+            }
+            opt.textContent = `📁 ไฟล์นำเข้าล่าสุด: ${file.name} (${detectedDate})`;
+            selector.value = 'imported_file';
+          }
+
+          const badgeEl = document.querySelector('header span.text-blue-200');
+          if (badgeEl) {
+            badgeEl.textContent = `อัปเดตล่าสุด: ${detectedDate} (จากไฟล์ ${file.name})`;
+          }
+
+          try {
+            localStorage.setItem('cached_stock_imported_file', JSON.stringify(parsed));
+            if (file.name.includes('7_10') || detectedDate === '07/10/2026') {
+              localStorage.setItem('cached_stock_7_10_2026', JSON.stringify(parsed));
+              if (selector) {
+                let opt710 = selector.querySelector('option[value="import_7_10"]');
+                if (opt710) {
+                  opt710.textContent = `⭐ งวดล่าสุด: 07 ต.ค. 26 (${file.name})`;
+                  selector.value = 'import_7_10';
+                }
+              }
+              const banner = document.getElementById('latestUpdateBanner');
+              if (banner) {
+                banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+                banner.innerHTML = `<span>✅ โหลดข้อมูลสต็อกล่าสุด <strong>${file.name}</strong> (${detectedDate}) เข้าสู่แดชบอร์ดเรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
+              }
+            }
+          } catch (err) {}
+          updateDashboard(rawStockData);
+          showToast(`✅ นำเข้าข้อมูลสำเร็จ! โหลด ${parsed.length} รายการ จาก ${file.name}`, 'success');
+        } else {
+          showToast('⚠️ ไม่พบรายการสินค้าแบรนด์ พญานาค ในไฟล์ที่เลือก โปรดตรวจสอบแผ่นงานและหัวตาราง', 'warning');
+        }
+      };
+
+      if (isExcel && typeof XLSX !== 'undefined') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            let parsed = [];
+            for (const sheetName of workbook.SheetNames) {
+              const worksheet = workbook.Sheets[sheetName];
+              const csvText = XLSX.utils.sheet_to_csv(worksheet);
+              parsed = parseGoogleSheetCSV(csvText, detectedDate);
+              if (parsed && parsed.length > 0) break;
+            }
+            onDataParsed(parsed);
+          } catch (err) {
+            console.error(err);
+            showToast('❌ เกิดข้อผิดพลาดในการอ่านไฟล์ Excel: ' + err.message, 'warning');
+          }
+          event.target.value = '';
+        };
+        reader.onerror = function() {
+          showToast('❌ ไม่สามารถอ่านไฟล์ Excel จากเครื่องได้', 'warning');
+          event.target.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const text = e.target.result;
+          const parsed = parseGoogleSheetCSV(text, detectedDate);
+          onDataParsed(parsed);
+        } catch (err) {
+          console.error(err);
+          showToast('❌ เกิดข้อผิดพลาดในการอ่านไฟล์ CSV: ' + err.message, 'warning');
+        }
+        event.target.value = '';
+      };
+      reader.onerror = function() {
+        showToast('❌ ไม่สามารถอ่านไฟล์ CSV จากเครื่องได้', 'warning');
+        event.target.value = '';
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    // 3.1 JSONP Fetcher for Google Sheets Visualization API (Bypasses CORS 100%)
+    function fetchGoogleSheetsJSONP(gid, timeoutMs = 8000) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'gvizCallback_' + Math.floor(Math.random() * 1000000);
+        const script = document.createElement('script');
+        let timer = null;
+
+        window[callbackName] = function(data) {
+          cleanup();
+          if (data && data.table) {
+            resolve(data.table);
+          } else if (data && data.status === 'error') {
+            reject(new Error(data.errors && data.errors[0] ? data.errors[0].detailed_message : 'GViz Error'));
+          } else {
+            reject(new Error('Invalid GViz response format'));
+          }
+        };
+
+        function cleanup() {
+          if (timer) clearTimeout(timer);
+          delete window[callbackName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        timer = setTimeout(() => {
+          cleanup();
+          reject(new Error('JSONP timeout'));
+        }, timeoutMs);
+
+        script.onerror = function() {
+          cleanup();
+          reject(new Error('JSONP script load failed'));
+        };
+
+        script.src = `${GOOGLE_SHEET_BASE}/gviz/tq?tqx=responseHandler:${callbackName}&gid=${gid}&t=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    // 3.2 Parser for GViz Table Format
+    function parseGvizTable(table, defaultDate = '30/09/2026') {
+      if (!table || !table.cols || !table.rows) return [];
+      
+      let colNames = table.cols.map(c => (c && (c.label || c.id) ? String(c.label || c.id).trim() : ''));
+      let startRowIdx = 0;
+
+      const hasLabels = colNames.some(n => {
+        const up = n.toUpperCase();
+        return up.includes('ART') || up.includes('QTY') || up.includes('MAT') || up.includes('VAL') || up.includes('PERIOD');
       });
 
-      // 1. Category Chart
-      const ctxCat = document.getElementById('categoryChart').getContext('2d');
-      new Chart(ctxCat, {
-        type: 'doughnut',
-        data: {
-          labels: ['สายยางใส', 'สายยางเขียว', 'สายยางเด้ง ฟ้ามัน', 'สายยางม้วน PVC'],
-          datasets: [{
-            data: [clearVal, greenVal, elasticVal, rollVal],
-            backgroundColor: ['#2563eb', '#10b981', '#0284c7', '#f59e0b'],
-            borderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 11 } } },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${((ctx.raw/1027616.02)*100).toFixed(2)}%)`
+      if (!hasLabels && table.rows.length > 0) {
+        const r0 = table.rows[0];
+        const r0Names = r0.c ? r0.c.map(cell => cell && cell.v !== null && cell.v !== undefined ? String(cell.v).trim() : '') : [];
+        if (r0Names.some(n => {
+          const up = n.toUpperCase();
+          return up.includes('ART') || up.includes('QTY') || up.includes('MAT') || up.includes('VAL') || up.includes('PERIOD') || up.includes('สินค้า');
+        })) {
+          colNames = r0Names;
+          startRowIdx = 1;
+        }
+      }
+
+      let perioddateIdx = -1, artnoIdx = -1, artdescIdx = -1, sitenoIdx = -1, sitenameIdx = -1, onhandqtyIdx = -1, onhandvalueIdx = -1;
+      colNames.forEach((col, idx) => {
+        const c = String(col || '').trim().toUpperCase().replace(/[\s_.-]/g, '');
+        if (c.includes('PERIODDATE') || c.includes('CRDATE') || c.includes('DOCDATE') || c.includes('วันที่')) perioddateIdx = idx;
+        else if (c.includes('ARTNO') || c.includes('ARTICLE') || c.includes('MATERIAL') || c.includes('รหัสสินค้า') || c.includes('SKU')) artnoIdx = idx;
+        else if (c.includes('ARTDESC') || c.includes('DESCRIPTION') || c.includes('MAKTX') || c.includes('ชื่อสินค้า') || c.includes('รายการ')) artdescIdx = idx;
+        else if (c.includes('SITENO') || c.includes('STORENO') || c.includes('PLANT') || c.includes('รหัสสาขา') || c.includes('สาขา')) sitenoIdx = idx;
+        else if (c.includes('SITENAME') || c.includes('STORENAME') || c.includes('PLANTNAME') || c.includes('ชื่อสาขา')) sitenameIdx = idx;
+        else if (c.includes('ONHANDQTY') || c.includes('STOCKQTY') || c.includes('LABST') || c.includes('QTY') || c.includes('จำนวน')) onhandqtyIdx = idx;
+        else if (c.includes('ONHANDVALUE') || c.includes('STOCKVAL') || c.includes('SALESVAL') || c.includes('VAL') || c.includes('มูลค่า')) onhandvalueIdx = idx;
+      });
+
+      if (artnoIdx === -1 && table.cols.length >= 6) {
+        perioddateIdx = 0; artnoIdx = 1; artdescIdx = 2; sitenameIdx = 3; onhandqtyIdx = 4; onhandvalueIdx = 5;
+      }
+
+      const list = [];
+      for (let r = startRowIdx; r < table.rows.length; r++) {
+        const row = table.rows[r];
+        if (!row || !row.c) continue;
+
+        const getCell = (idx) => {
+          if (idx === -1 || !row.c[idx]) return '';
+          const cell = row.c[idx];
+          return cell.v !== null && cell.v !== undefined ? cell.v : (cell.f || '');
+        };
+
+        let perioddate = perioddateIdx !== -1 ? String(getCell(perioddateIdx)).trim() : defaultDate;
+        if (!perioddate) perioddate = defaultDate;
+
+        let artno = String(getCell(artnoIdx)).trim();
+        if (artno.endsWith('.0')) artno = artno.slice(0, -2);
+        const artdesc = String(getCell(artdescIdx)).trim();
+        let siteno = sitenoIdx !== -1 ? String(getCell(sitenoIdx)).trim() : '';
+        if (siteno.endsWith('.0')) siteno = siteno.slice(0, -2);
+        const sitename = sitenameIdx !== -1 ? String(getCell(sitenameIdx)).trim() : '';
+        if (!siteno) {
+          if (sitename.includes('เมกาโฮม') || sitename.startsWith('M')) siteno = 'M000';
+          else if (sitename.includes('โฮมโปร') || sitename.startsWith('S')) siteno = 'S000';
+          else if (sitename.includes('วังน้อย') || sitename.includes('คลัง') || sitename.startsWith('DC')) siteno = 'DC02';
+          else siteno = 'S000';
+        }
+
+        const qtyVal = getCell(onhandqtyIdx);
+        const valVal = onhandvalueIdx !== -1 ? getCell(onhandvalueIdx) : 0;
+        const qtyNum = typeof qtyVal === 'number' ? qtyVal : parseFloat(String(qtyVal).replace(/,/g, ''));
+        const valNum = typeof valVal === 'number' ? valVal : parseFloat(String(valVal).replace(/,/g, ''));
+
+        if (artno && (!artdesc || artdesc.includes('พญานาค')) && !isNaN(qtyNum)) {
+          list.push({
+            perioddate: perioddate,
+            artno: artno,
+            artdesc: artdesc,
+            siteno: siteno,
+            sitename: sitename,
+            onhandqty: qtyNum,
+            onhandvalue: isNaN(valNum) ? 0 : valNum
+          });
+        }
+      }
+      return list;
+    }
+
+    // 3.3 Prompt Custom Sheet (เช่น ชีต 6) Handler
+    function promptCustomSheet() {
+      const currentGid = localStorage.getItem('stock_custom_sheet_6_gid') || '';
+      const input = prompt("กรุณาระบุเลข GID หรือวางลิงก์ URL ของ 'ชีต 6' จาก Google Sheets:\n(ตัวอย่าง: https://docs.google.com/spreadsheets/d/.../edit#gid=123456789 หรือใส่เฉพาะเลข gid)", currentGid);
+      if (input === null) return;
+      
+      let gid = input.trim();
+      const m = gid.match(/[#&?]gid=([0-9]+)/);
+      if (m) gid = m[1];
+
+      if (!gid || !/^\d+$/.test(gid)) {
+        showToast('⚠️ รูปแบบ GID ไม่ถูกต้อง กรุณาระบุเฉพาะตัวเลข GID หรือวางลิงก์ชีตเต็ม', 'warning');
+        return;
+      }
+
+      try {
+        localStorage.setItem('stock_custom_sheet_6_gid', gid);
+      } catch (e) {}
+
+      const selector = document.getElementById('sheetSelector');
+      if (selector) {
+        let opt = selector.querySelector(`option[value="${gid}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = gid;
+          selector.prepend(opt);
+        }
+        opt.textContent = `ชีต 6: อัปเดตล่าสุด (GID: ${gid})`;
+        selector.value = gid;
+      }
+
+      const sheetLinks = document.querySelectorAll('header a[href*="docs.google.com"]');
+      sheetLinks.forEach(link => {
+        link.href = `${GOOGLE_SHEET_BASE}/edit?gid=${gid}#gid=${gid}`;
+        link.innerHTML = `📊 เปิดชีตต้นฉบับ (ชีต 6 - GID ${gid})`;
+      });
+
+      showToast(`⏳ กำลังเชื่อมต่อซิงค์ข้อมูลชีต 6 (GID: ${gid})...`, 'info');
+      syncFromGoogleSheets();
+    }
+
+    // 4. Multi-Tier Live Sync Function
+    async function syncFromGoogleSheets() {
+      const syncBtn = document.getElementById('syncBtn');
+      const syncIcon = document.getElementById('syncIcon');
+      const syncText = document.getElementById('syncText');
+      const gid = document.getElementById('sheetSelector') ? document.getElementById('sheetSelector').value : '2010456650';
+
+      if (gid === 'ADD_CUSTOM') {
+        promptCustomSheet();
+        return;
+      }
+
+      if (syncIcon) syncIcon.className = "inline-block animate-spin";
+      if (syncText) syncText.innerText = "กำลังซิงค์...";
+      if (syncBtn) syncBtn.disabled = true;
+
+      try {
+        // Tier 1: Try JSONP (Bypasses browser CORS policy 100%, works under file:/// and any origin)
+        try {
+          const table = await fetchGoogleSheetsJSONP(gid);
+          const parsed = parseGvizTable(table);
+          if (parsed && parsed.length > 0) {
+            rawStockData = parsed;
+            try { localStorage.setItem('cached_stock_' + gid, JSON.stringify(parsed)); } catch (e) {}
+            if (parsed[0] && parsed[0].perioddate) {
+              const badgeEl = document.querySelector('header span.text-blue-200');
+              if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: ${parsed[0].perioddate} (ซิงค์สด Google Sheets)`;
+            }
+            updateDashboard(rawStockData);
+            showToast(`✅ ซิงค์สดสำเร็จ! ดึงข้อมูลตรงจาก Google Sheets สำเร็จ (${rawStockData.length} รายการ)`, 'success');
+            return;
+          }
+        } catch (jsonpErr) {
+          console.warn('JSONP sync failed or restricted, trying fallback gateways...', jsonpErr);
+        }
+
+        // Tier 2: Try Direct Fetch & CORS Proxies for CSV
+        const csvUrl = `${GOOGLE_SHEET_BASE}/gviz/tq?tqx=out:csv&gid=${gid}&t=${Date.now()}`;
+        const proxyUrls = [
+          csvUrl,
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(csvUrl)}`,
+          `https://corsproxy.io/?${encodeURIComponent(csvUrl)}`
+        ];
+
+        for (const url of proxyUrls) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const resp = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (resp.ok) {
+              const text = await resp.text();
+              const parsed = parseGoogleSheetCSV(text);
+              if (parsed && parsed.length > 0) {
+                rawStockData = parsed;
+                try { localStorage.setItem('cached_stock_' + gid, JSON.stringify(parsed)); } catch (e) {}
+                if (parsed[0] && parsed[0].perioddate) {
+                  const badgeEl = document.querySelector('header span.text-blue-200');
+                  if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: ${parsed[0].perioddate} (ซิงค์สด Google Sheets)`;
+                }
+                updateDashboard(rawStockData);
+                showToast(`✅ ซิงค์สดสำเร็จ! โหลดข้อมูล ${rawStockData.length} รายการเรียบร้อยแล้ว`, 'success');
+                return;
+              }
+            }
+          } catch (e) {
+            // continue to next proxy
+          }
+        }
+
+        // Tier 3: Offline fallback - localStorage cache
+        const cached = localStorage.getItem('cached_stock_' + gid);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              rawStockData = parsed;
+              updateDashboard(rawStockData);
+              showToast(`ℹ️ ใช้งานโหมดออฟไลน์: แสดงข้อมูลล่าสุดจากหน่วยความจำแคช (${rawStockData.length} รายการ)`, 'info');
+              return;
+            }
+          } catch (e) {}
+        }
+
+        // Tier 4: Offline fallback - embedded dataset
+        if (typeof embeddedSheets !== 'undefined' && embeddedSheets && embeddedSheets[gid]) {
+          rawStockData = embeddedSheets[gid];
+          updateDashboard(rawStockData);
+          showToast(`ℹ️ ใช้งานโหมดออฟไลน์: แสดงข้อมูลสำรองประจำงวดที่บันทึกไว้ (${rawStockData.length} รายการ)`, 'info');
+          return;
+        }
+
+        // Tier 5: Polite guidance
+        showToast('ℹ️ ขณะนี้ออฟไลน์: ระบบแสดงข้อมูลสำรองล่าสุด หรือกดปุ่ม "📂 นำเข้า CSV" เพื่ออัปเดตไฟล์เองได้', 'info');
+      } catch (err) {
+        console.warn('Sync error:', err);
+        showToast('ℹ️ ใช้งานโหมดออฟไลน์: กำลังแสดงข้อมูลสำรองล่าสุด', 'info');
+      } finally {
+        if (syncIcon) syncIcon.className = "";
+        if (syncText) syncText.innerText = "ซิงค์สด Google Sheets";
+        if (syncBtn) syncBtn.disabled = false;
+      }
+    }
+
+    // 5. Switch Sheet Period Handler
+    async function switchSheet(gid) {
+      if (gid === 'import_7_10') {
+        const cached710 = localStorage.getItem('cached_stock_7_10_2026');
+        if (cached710) {
+          try {
+            const parsed710 = JSON.parse(cached710);
+            if (Array.isArray(parsed710) && parsed710.length > 0) {
+              rawStockData = parsed710;
+              const badgeEl = document.querySelector('header span.text-blue-200');
+              if (badgeEl) badgeEl.textContent = 'อัปเดตล่าสุด: 07 ตุลาคม 2026 (Stock PTI 7_10_2026)';
+              updateDashboard(rawStockData);
+              showToast(`✅ แสดงผลข้อมูลงวดล่าสุด 07 ต.ค. 2026 (${rawStockData.length} รายการ)`, 'success');
+              return;
+            }
+          } catch (e) {}
+        }
+        document.getElementById('csvFileInput').click();
+        return;
+      }
+      if (gid === 'ADD_CUSTOM') {
+        promptCustomSheet();
+        return;
+      }
+      if (gid === 'imported_file') {
+        const cached = localStorage.getItem('cached_stock_imported_file');
+        if (cached) {
+          try {
+            rawStockData = JSON.parse(cached);
+            updateDashboard(rawStockData);
+            showToast(`✅ แสดงผลข้อมูลจากไฟล์นำเข้าล่าสุด (${rawStockData.length} รายการ)`, 'success');
+            return;
+          } catch(e) {}
+        }
+      }
+      if (gid === '2010456650') {
+        rawStockData = sheet5Data;
+        updateDashboard(rawStockData);
+        showToast('✅ สลับข้อมูลสำเร็จ: แสดงผล ชีต 5 (30 ก.ย. 2026 - สิ้นเดือน ก.ย.) รวม 363 รายการ', 'success');
+        return;
+      }
+      if (gid === '1943525185') {
+        rawStockData = sheet4DataNormalized;
+        updateDashboard(rawStockData);
+        showToast('✅ สลับข้อมูลสำเร็จ: แสดงผล ชีต 4 (15 ก.ย. 2026 - กลางเดือน ก.ย.) รวม 335 รายการ', 'info');
+        return;
+      }
+
+      // Check local cache for custom/other sheets
+      const cached = localStorage.getItem('cached_stock_' + gid);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            rawStockData = parsed;
+            updateDashboard(rawStockData);
+            showToast(`✅ สลับข้อมูลสำเร็จ: แสดงผล Sheet GID: ${gid} (${rawStockData.length} รายการ)`, 'success');
+            return;
+          }
+        } catch (e) {}
+      }
+
+      if (typeof embeddedSheets !== 'undefined' && embeddedSheets && embeddedSheets[gid]) {
+        rawStockData = embeddedSheets[gid];
+        updateDashboard(rawStockData);
+        showToast(`✅ สลับข้อมูลสำเร็จ: แสดงผล Sheet GID: ${gid} (${rawStockData.length} รายการ)`, 'success');
+        return;
+      }
+      await syncFromGoogleSheets();
+    }
+
+    // 5.1 Auto-Load Local Stock PTI 7_10_2026 file if available on server
+    async function tryAutoLoadLocalExcel() {
+      const candidateFiles = ['Stock PTI 7_10_2026.xls', 'Stock_PTI_7_10_2026.csv', 'Stock PTI 7_10_2026.csv'];
+      for (const f of candidateFiles) {
+        try {
+          const resp = await fetch(encodeURI(f));
+          if (resp.ok) {
+            if (f.endsWith('.xls') || f.endsWith('.xlsx')) {
+              if (typeof XLSX === 'undefined') continue;
+              const buf = await resp.arrayBuffer();
+              const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
+              for (const s of wb.SheetNames) {
+                const csv = XLSX.utils.sheet_to_csv(wb.Sheets[s]);
+                const parsed = parseGoogleSheetCSV(csv, '07/10/2026');
+                if (parsed && parsed.length > 0) {
+                  rawStockData = parsed;
+                  try { localStorage.setItem('cached_stock_7_10_2026', JSON.stringify(parsed)); } catch (e) {}
+                  const selector = document.getElementById('sheetSelector');
+                  if (selector) {
+                    let opt = selector.querySelector('option[value="import_7_10"]');
+                    if (opt) opt.textContent = `⭐ งวดล่าสุด: 07 ต.ค. 26 (${f})`;
+                    selector.value = 'import_7_10';
+                  }
+                  const badgeEl = document.querySelector('header span.text-blue-200');
+                  if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: 07 ตุลาคม 2026 (จากไฟล์ ${f})`;
+                  const banner = document.getElementById('latestUpdateBanner');
+                  if (banner) {
+                    banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+                    banner.innerHTML = `<span>✅ โหลดข้อมูลอัตโนมัติจาก <strong>${f}</strong> (07/10/2026) เรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
+                  }
+                  updateDashboard(rawStockData);
+                  showToast(`✅ โหลดข้อมูลอัตโนมัติจาก ${f} (7 ต.ค. 2026) สำเร็จ! (${parsed.length} รายการ)`, 'success');
+                  return true;
+                }
               }
             }
           }
-        }
-      });
+        } catch (e) {}
+      }
+      return false;
+    }
 
-      // 2. Trend Chart (มิ.ย. -> ก.ย. 2026)
-      const ctxTrend = document.getElementById('trendChart').getContext('2d');
-      new Chart(ctxTrend, {
-        type: 'line',
-        data: {
-          labels: ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26'],
-          datasets: [{
-            label: 'มูลค่าสต็อกราคาเต็ม (บาท)',
-            data: [1417737.42, 1238958.92, 1119305.93, 1027616.02],
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-            fill: true,
-            tension: 0.35,
-            pointRadius: 5,
-            pointBackgroundColor: '#1d4ed8'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => ` มูลค่าคงเหลือเต็ม: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-              }
+    // 6. Non-Intrusive Notification Toast
+    function showToast(msg, type = 'info') {
+      let toast = document.getElementById('liveToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'liveToast';
+        toast.className = 'fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl text-sm font-medium transition transform translate-y-10 opacity-0';
+        document.body.appendChild(toast);
+      }
+      if (type === 'success') {
+        toast.className = 'fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl text-sm font-semibold transition transform translate-y-0 opacity-100 bg-emerald-600 text-white flex items-center gap-2';
+      } else if (type === 'warning') {
+        toast.className = 'fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl text-sm font-medium transition transform translate-y-0 opacity-100 bg-slate-800 text-amber-300 border border-amber-500/50 flex items-center gap-2';
+      } else {
+        toast.className = 'fixed bottom-5 right-5 z-50 max-w-md px-4 py-3 rounded-xl shadow-xl text-sm font-medium transition transform translate-y-0 opacity-100 bg-blue-600 text-white flex items-center gap-2 shadow-blue-900/30';
+      }
+      toast.innerHTML = msg;
+      setTimeout(() => {
+        toast.className = toast.className.replace('opacity-100', 'opacity-0 translate-y-10');
+      }, 5000);
+    }
+
+    // Initialize Dashboard
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Version enforcement & stale cache eviction
+      const APP_VERSION = "2026-10-07_v7";
+      try {
+        const lastVer = localStorage.getItem('stock_app_ver');
+        if (lastVer !== APP_VERSION) {
+          localStorage.removeItem('cached_stock_1943525185');
+          localStorage.removeItem('cached_stock_2010456650');
+          localStorage.setItem('stock_app_ver', APP_VERSION);
+        }
+      } catch (e) {}
+
+      const selector = document.getElementById('sheetSelector');
+
+      // 2. Load saved custom sheet 6 if present
+      const savedGid = localStorage.getItem('stock_custom_sheet_6_gid');
+      if (savedGid && selector) {
+        let opt = selector.querySelector(`option[value="${savedGid}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = savedGid;
+          opt.textContent = `ชีต 6: อัปเดตล่าสุด (GID: ${savedGid})`;
+          selector.prepend(opt);
+        }
+      }
+
+      // 3. Boot with 7 ต.ค. 2026 if cached
+      const cached710 = localStorage.getItem('cached_stock_7_10_2026');
+      if (cached710) {
+        try {
+          const parsed710 = JSON.parse(cached710);
+          if (Array.isArray(parsed710) && parsed710.length > 0) {
+            if (selector) selector.value = 'import_7_10';
+            rawStockData = parsed710;
+            const badgeEl = document.querySelector('header span.text-blue-200');
+            if (badgeEl) badgeEl.textContent = 'อัปเดตล่าสุด: 07 ตุลาคม 2026 (Stock PTI 7_10_2026)';
+            const banner = document.getElementById('latestUpdateBanner');
+            if (banner) {
+              banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+              banner.innerHTML = `<span>✅ ข้อมูลสต็อกล่าสุด: <strong>07 ต.ค. 2026 (Stock PTI 7_10_2026)</strong> พร้อมแสดงผล (${parsed710.length} รายการ)</span>`;
             }
-          },
-          scales: {
-            y: {
-              min: 800000,
-              ticks: { callback: (v) => '฿' + v.toLocaleString() }
-            }
+            updateDashboard(rawStockData);
+            return;
           }
-        }
-      });
+        } catch (e) {}
+      }
 
-      // 3. Top Branches Chart (ชื่อสาขาเต็ม & มูลค่าราคาเต็ม ไม่ใส่ตัวเลขสาขา)
-      const branchMap = {};
-      rawStockData.forEach(r => {
-        let branchFullName = r.sitename;
-        if (r.siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
-          branchFullName = 'โฮมโปร ' + branchFullName;
-        } else if (r.siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
-          branchFullName = 'คลังศูนย์กระจายสินค้า ' + branchFullName;
+      // 4. Boot with Sheet 6 if cached, else default to Sheet 5
+      if (savedGid) {
+        const cached6 = localStorage.getItem('cached_stock_' + savedGid);
+        if (cached6) {
+          try {
+            const parsed6 = JSON.parse(cached6);
+            if (Array.isArray(parsed6) && parsed6.length > 0) {
+              if (selector) selector.value = savedGid;
+              rawStockData = parsed6;
+              updateDashboard(rawStockData);
+              return;
+            }
+          } catch(e) {}
         }
-        branchMap[branchFullName] = (branchMap[branchFullName] || 0) + r.onhandvalue;
-      });
-      const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+      }
 
-      const ctxBranch = document.getElementById('branchChart').getContext('2d');
-      new Chart(ctxBranch, {
-        type: 'bar',
-        data: {
-          labels: sortedBranches.map(b => b[0]),
-          datasets: [{
-            label: 'มูลค่าสต็อกราคาเต็ม (บาท)',
-            data: sortedBranches.map(b => b[1]),
-            backgroundColor: '#4f46e5',
-            borderRadius: 6
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => ` มูลค่าราคาเต็ม: ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              ticks: { callback: (v) => '฿' + v.toLocaleString() }
-            }
-          }
-        }
-      });
+      if (selector) {
+        selector.value = '2010456650';
+      }
+
+      // Always boot with 30 ก.ย. 2026 (Sheet 5) data by default
+      rawStockData = sheet5Data;
+      try {
+        localStorage.setItem('cached_stock_2010456650', JSON.stringify(sheet5Data));
+      } catch (e) {}
+
+      updateDashboard(rawStockData);
+
+      // Attempt background auto-load of local 7_10 file if web server allows
+      tryAutoLoadLocalExcel();
     });
   </script>
 </body>
