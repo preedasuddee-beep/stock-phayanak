@@ -12,7 +12,172 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Sarabun', sans-serif; }
+    /* Base typography and layout reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+    
+    /* Layout & Container fallbacks */
+    .max-w-7xl { max-width: 80rem; margin-left: auto; margin-right: auto; }
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+    .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
+    .space-y-8 > * + * { margin-top: 2rem; }
+    
+    /* Responsive Grid System */
+    .grid { display: grid; }
+    .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    .gap-4 { gap: 1rem; }
+    .gap-5 { gap: 1.25rem; }
+    .gap-6 { gap: 1.5rem; }
+    
+    @media (min-width: 640px) {
+      .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sm\:flex-row { flex-direction: row; }
+    }
+    @media (min-width: 768px) {
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .md\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .md\:flex-row { flex-direction: row; }
+    }
+    @media (min-width: 1024px) {
+      .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    
+    /* Flexbox utilities */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .flex-wrap { flex-wrap: wrap; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .items-baseline { align-items: baseline; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    
+    /* Card, Border & Background Utilities */
+    .bg-white { background-color: #ffffff; }
+    .bg-slate-50 { background-color: #f8fafc; }
+    .bg-slate-100 { background-color: #f1f5f9; }
+    .bg-blue-50 { background-color: #eff6ff; }
+    .bg-amber-50 { background-color: #fffbeb; }
+    .bg-emerald-50 { background-color: #ecfdf5; }
+    .bg-red-50 { background-color: #fef2f2; }
+    
+    .rounded-2xl { border-radius: 1rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-full { border-radius: 9999px; }
+    
+    .p-4 { padding: 1rem; }
+    .p-5 { padding: 1.25rem; }
+    .p-6 { padding: 1.5rem; }
+    .p-8 { padding: 2rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); }
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
+    .border { border: 1px solid #e2e8f0; }
+    .border-b { border-bottom: 1px solid #e2e8f0; }
+    .border-t { border-top: 1px solid #e2e8f0; }
+    .border-slate-200 { border-color: #e2e8f0; }
+    .border-slate-300 { border-color: #cbd5e1; }
+    .border-indigo-100 { border-color: #e0e7ff; }
+    .border-indigo-200 { border-color: #c7d2fe; }
+    .border-red-200 { border-color: #fecaca; }
+    
+    /* Typography */
+    .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    
+    .font-bold { font-weight: 700; }
+    .font-extrabold { font-weight: 800; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
+    .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    
+    .text-slate-500 { color: #64748b; }
+    .text-slate-600 { color: #475569; }
+    .text-slate-700 { color: #334155; }
+    .text-slate-800 { color: #1e293b; }
+    .text-slate-900 { color: #0f172a; }
+    .text-blue-950 { color: #172554; }
+    .text-indigo-900 { color: #312e81; }
+    .text-indigo-950 { color: #1e1b4b; }
+    .text-emerald-600 { color: #059669; }
+    .text-emerald-700 { color: #047857; }
+    .text-emerald-800 { color: #065f46; }
+    .text-red-500 { color: #ef4444; }
+    .text-red-600 { color: #dc2626; }
+    .text-red-700 { color: #b91c1c; }
+    .text-red-800 { color: #991b1b; }
+    .text-white { color: #ffffff; }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+    
+    /* Table Styling */
+    .overflow-x-auto { overflow-x: auto; width: 100%; }
+    .overflow-hidden { overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background-color: #f1f5f9; color: #334155; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; padding: 0.75rem 0.75rem; border-bottom: 1px solid #cbd5e1; }
+    td { padding: 0.75rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; }
+    tr:hover { background-color: #f8fafc; }
+    
+    /* Chart Containers & Sizing */
+    .h-64 { height: 16rem; min-height: 256px; }
+    .relative { position: relative; }
+    .w-full { width: 100%; }
+    canvas { display: block; max-width: 100%; height: 100% !important; }
+    
+    /* Visual Infographic Fallback Bar Styles */
+    .fallback-chart-box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0.5rem;
+    }
+    .fallback-meter-track {
+      width: 100%;
+      height: 14px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      display: flex;
+      margin: 8px 0;
+    }
+    .fallback-meter-seg { height: 100%; transition: width 0.3s ease; }
+    .fallback-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    
     @media print {
       .no-print { display: none !important; }
       body { background: white !important; }
@@ -21,15 +186,15 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
 
-  <!-- Top Notification Banner for Latest Stock 7_10_2026 -->
+  <!-- Top Notification Banner for Latest Stock 16_10_2026 -->
   <div id="latestUpdateBanner" class="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white px-4 py-2.5 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-3 shadow border-b border-emerald-500/30 no-print">
     <div class="flex items-center gap-2">
       <span class="text-base animate-pulse">📢</span>
-      <span><strong>อัปเดตข้อมูลล่าสุด:</strong> ไฟล์ <strong>Stock PTI 7_10_2026</strong> (งวด 07 ต.ค. 2026) พร้อมใช้งาน</span>
+      <span><strong>อัปเดตข้อมูลล่าสุด:</strong> ไฟล์ <strong>Stock PTI 16_10_2026</strong> (งวด 16 ต.ค. 2026) พร้อมใช้งาน</span>
     </div>
     <div class="flex items-center gap-2">
       <button onclick="document.getElementById('csvFileInput').click()" class="bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-        <span>📂</span> <span>คลิกเลือกไฟล์ Stock PTI 7_10_2026.xls เพื่อโหลดข้อมูล</span>
+        <span>📂</span> <span>คลิกเลือกไฟล์ Stock PTI 16_10_2026.xls เพื่อโหลดข้อมูล</span>
       </button>
       <button onclick="promptCustomSheet()" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-1.5 rounded-lg text-xs transition border border-white/20">
         <span>📋</span> <span>หรือซิงค์ชีต 6</span>
@@ -157,8 +322,9 @@
           </div>
           <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full font-medium">On-Hand</span>
         </div>
-        <div class="relative h-64 flex items-center justify-center">
+        <div class="relative h-64 flex items-center justify-center" id="categoryChartBox">
           <canvas id="categoryChart"></canvas>
+          <div id="categoryFallback" style="display:none;" class="fallback-chart-box"></div>
         </div>
       </div>
 
@@ -171,8 +337,9 @@
           </div>
           <span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full font-medium">Clearance -36.6%</span>
         </div>
-        <div class="relative h-64">
+        <div class="relative h-64" id="trendChartBox">
           <canvas id="trendChart"></canvas>
+          <div id="trendFallback" style="display:none;" class="fallback-chart-box"></div>
         </div>
       </div>
 
@@ -185,8 +352,9 @@
           </div>
           <span class="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full font-medium">Top Capital</span>
         </div>
-        <div class="relative h-64">
+        <div class="relative h-64" id="branchChartBox">
           <canvas id="branchChart"></canvas>
+          <div id="branchFallback" style="display:none;" class="fallback-chart-box"></div>
         </div>
       </div>
 
@@ -381,6 +549,180 @@
         </div>
         <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-amber-800 text-xs font-semibold">
           ⏳ ข้อมูล ณ 30 ก.ย. 2026 (ชีต 5) | เหลือเวลาอีก 3 เดือนเต็ม (92 วัน) ถึง 31 ธ.ค. 2026
+        </div>
+      </div>
+
+      <!-- Visual Period Sales Comparison Cards (เปรียบเทียบยอดขายแต่ละช่วงเวลา เข้าใจง่าย) -->
+      <div class="space-y-4 bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 p-5 sm:p-6 rounded-2xl border border-blue-200/70">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-blue-100 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">Executive Comparison</span>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900">📊 เปรียบเทียบยอดขาย & ความเร็วการระบายสต็อกในแต่ละช่วงเวลา (เข้าใจง่าย)</h3>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">เปรียบเทียบภาพรวม 4 งวดสำคัญ เพื่อดูว่าช่วงเวลาใดระบายสต็อกได้เร็วที่สุด และความเร็วต่อวันเติบโตอย่างไร</p>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg flex items-center gap-1">
+            <span>🔥</span> สิ้น ก.ย. ขายเร็วขึ้น 2.7 เท่า (฿8,582/วัน)
+          </span>
+        </div>
+
+        <!-- 4 Period Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: งวด มิ.ย. -->
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold text-slate-500">งวดที่ 1 (มิ.ย.)</span>
+              <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full">เปิดตัวแคมเปญ</span>
+            </div>
+            <div class="text-[11px] text-slate-500">8 มิ.ย. - 16 ก.ค. (~38 วัน)</div>
+            <div class="mt-3">
+              <div class="text-xs text-slate-500">ยอดขายรวม:</div>
+              <div class="text-xl font-extrabold text-blue-900 font-mono">฿178,779</div>
+              <div class="text-[11px] font-semibold text-slate-600 mt-0.5">📦 4,477.00 ม้วน</div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+              <span class="text-slate-500">ความเร็วต่อวัน:</span>
+              <span class="font-bold text-blue-800 font-mono">฿4,705 /วัน</span>
+            </div>
+            <div class="mt-2 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-blue-600 h-full rounded-full" style="width: 100%;"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: งวด ก.ค. -->
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold text-slate-500">งวดที่ 2 (ก.ค.)</span>
+              <span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-full">ขายสม่ำเสมอ</span>
+            </div>
+            <div class="text-[11px] text-slate-500">16 ก.ค. - 17 ส.ค. (~32 วัน)</div>
+            <div class="mt-3">
+              <div class="text-xs text-slate-500">ยอดขายรวม:</div>
+              <div class="text-xl font-extrabold text-slate-800 font-mono">฿119,653</div>
+              <div class="text-[11px] font-semibold text-slate-600 mt-0.5">📦 1,951.00 ม้วน</div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+              <span class="text-slate-500">ความเร็วต่อวัน:</span>
+              <span class="font-bold text-slate-800 font-mono">฿3,739 /วัน</span>
+            </div>
+            <div class="mt-2 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-slate-400 h-full rounded-full" style="width: 67%;"></div>
+            </div>
+          </div>
+
+          <!-- Card 3: งวด ส.ค. -->
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold text-slate-500">งวดที่ 3 (ส.ค.)</span>
+              <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full">ชะลอตัวชั่วคราว</span>
+            </div>
+            <div class="text-[11px] text-slate-500">17 ส.ค. - 15 ก.ย. (~29 วัน)</div>
+            <div class="mt-3">
+              <div class="text-xs text-slate-500">ยอดขายรวม:</div>
+              <div class="text-xl font-extrabold text-slate-800 font-mono">฿91,690</div>
+              <div class="text-[11px] font-semibold text-slate-600 mt-0.5">📦 1,451.00 ม้วน</div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-slate-100 flex justify-between items-center text-xs">
+              <span class="text-slate-500">ความเร็วต่อวัน:</span>
+              <span class="font-bold text-amber-700 font-mono">฿3,162 /วัน</span>
+            </div>
+            <div class="mt-2 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-amber-400 h-full rounded-full" style="width: 51%;"></div>
+            </div>
+          </div>
+
+          <!-- Card 4: งวด สิ้น ก.ย. -->
+          <div class="bg-white rounded-xl p-4 border-2 border-emerald-500 shadow-sm relative overflow-hidden bg-gradient-to-b from-white to-emerald-50/40">
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold text-emerald-800">งวดที่ 4 (สิ้น ก.ย.)</span>
+              <span class="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-extrabold rounded-full">🔥 ฟื้นตัวก้าวกระโดด</span>
+            </div>
+            <div class="text-[11px] text-slate-500">15 - 30 ก.ย. 26 (เพียง 15 วัน!)</div>
+            <div class="mt-3">
+              <div class="text-xs text-slate-500">ยอดขายรวม:</div>
+              <div class="text-xl font-extrabold text-emerald-800 font-mono">฿128,725</div>
+              <div class="text-[11px] font-semibold text-emerald-700 mt-0.5">📦 3,294.04 ม้วน</div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-emerald-100 flex justify-between items-center text-xs">
+              <span class="text-slate-600 font-medium">ความเร็วต่อวัน:</span>
+              <span class="font-extrabold text-emerald-700 font-mono text-sm">฿8,582 /วัน</span>
+            </div>
+            <div class="mt-2 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full" style="width: 72%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Bar Comparison & Key Takeaways -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          <!-- Left: Sales Velocity Comparison Bars -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200">
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">⚡ เปรียบเทียบความเร็วการระบายสต็อกต่อวัน (บาท/วัน)</h4>
+            <div class="space-y-2.5">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-600">1. งวด มิ.ย. (~38 วัน)</span>
+                  <span class="font-mono font-bold text-blue-900">฿4,705 /วัน</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div class="bg-blue-600 h-full rounded-full" style="width: 54.8%;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-600">2. งวด ก.ค. (~32 วัน)</span>
+                  <span class="font-mono font-bold text-slate-700">฿3,739 /วัน</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div class="bg-slate-400 h-full rounded-full" style="width: 43.6%;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-600">3. งวด ส.ค. (~29 วัน)</span>
+                  <span class="font-mono font-bold text-slate-700">฿3,162 /วัน</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div class="bg-amber-400 h-full rounded-full" style="width: 36.8%;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-emerald-800 font-bold">4. งวด สิ้น ก.ย. (15 วัน) 👑</span>
+                  <span class="font-mono font-extrabold text-emerald-700">฿8,582 /วัน (+171%)</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                  <div class="bg-emerald-500 h-full rounded-full" style="width: 100%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Key Executive Insights -->
+          <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">💡 3 ข้อสรุปสำคัญสำหรับผู้บริหาร</h4>
+            <div class="space-y-2 text-xs text-slate-600">
+              <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200/60 flex items-start gap-2">
+                <span class="text-emerald-700 text-sm">🚀</span>
+                <div>
+                  <strong class="text-emerald-900">อัตราเร่งสูงสุดในรอบปี:</strong> ครึ่งหลังของ ก.ย. ทำยอดระบายสต็อกได้ <strong>฿8,582/วัน</strong> แสดงว่าแคมเปญโปรโมชั่น 1 แถม 1 หน้าร้านได้ผลชัดเจน
+                </div>
+              </div>
+              <div class="p-2 rounded-lg bg-blue-50 border border-blue-200/60 flex items-start gap-2">
+                <span class="text-blue-700 text-sm">📉</span>
+                <div>
+                  <strong class="text-blue-900">สต็อกรวมลดลงแล้ว -36.6%:</strong> ระบายออกไปสะสมแล้ว <strong>฿518,846.07 (11,173 ม้วน)</strong> จากจุดเริ่มต้น ฿1,417,737 เหลือ ฿898,891
+                </div>
+              </div>
+              <div class="p-2 rounded-lg bg-indigo-50 border border-indigo-200/60 flex items-start gap-2">
+                <span class="text-indigo-700 text-sm">🎯</span>
+                <div>
+                  <strong class="text-indigo-900">โอกาสพิชิตเป้าหมายสิ้นปี:</strong> หากรักษาความเร็วการขายระดับ ฿8,000 - ฿9,000/วัน ใน Q4 จะสามารถระบายสต็อกที่เหลือ <strong>฿898,891 หมดเกลี้ยงก่อน 31 ธ.ค. 2026</strong> ได้สำเร็จ
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -591,7 +933,8 @@
         <div>
           <label class="block text-xs font-semibold text-blue-900 mb-1">งวดข้อมูล (Google Sheets)</label>
           <select id="sheetSelector" autocomplete="off" onchange="switchSheet(this.value)" class="w-full text-sm px-3 py-2 border border-blue-400 bg-blue-50/50 text-blue-900 font-semibold rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            <option value="import_7_10" class="font-bold text-emerald-800 bg-emerald-50">⭐ งวดล่าสุด: 07 ต.ค. 26 (Stock PTI 7_10_2026)...</option>
+            <option value="import_16_10" class="font-bold text-emerald-800 bg-emerald-50">⭐ งวดล่าสุด: 16 ต.ค. 26 (Stock PTI 16_10_2026)...</option>
+            <option value="import_7_10">งวด 07 ต.ค. 26 (Stock PTI 7_10_2026)</option>
             <option value="2010456650" selected>ชีต 5: 30 ก.ย. 26 (สิ้นเดือน ก.ย.)</option>
             <option value="1943525185">ชีต 4: 15 ก.ย. 26 (กลางเดือน ก.ย.)</option>
             <option value="698231691">ชีต 3: 17 ส.ค. 26 (~เดือน ส.ค.)</option>
@@ -1645,92 +1988,105 @@
 
     function renderTable() {
       const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       let sumQty = 0;
       let sumVal = 0;
 
       filteredData.forEach(item => {
-        sumQty += item.onhandqty;
-        sumVal += item.onhandvalue;
+        const qty = typeof item.onhandqty === 'number' ? item.onhandqty : (parseFloat(item.onhandqty) || 0);
+        const val = typeof item.onhandvalue === 'number' ? item.onhandvalue : (parseFloat(item.onhandvalue) || 0);
+        sumQty += qty;
+        sumVal += val;
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
 
         let statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">ปกติ</span>';
-        if (item.onhandqty < 0) {
+        if (qty < 0) {
           statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800">ติดลบ (เช็คด่วน)</span>';
           tr.className += " bg-red-50/40";
-        } else if (item.onhandqty === 0) {
+        } else if (qty === 0) {
           statusBadge = '<span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">สินค้าหมด</span>';
         }
 
-        let branchFullName = item.sitename;
+        const siteno = String(item.siteno || '').trim();
+        let branchFullName = String(item.sitename || '').trim() || siteno;
         let channelBadge = '';
-        if (item.siteno.startsWith('DC')) {
+        if (siteno.startsWith('DC')) {
           channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-800 font-semibold rounded mr-1.5">DC</span>';
           if (!branchFullName.includes('คลัง') && !branchFullName.includes('DC')) {
             branchFullName = 'คลัง ' + branchFullName;
           }
-        } else if (item.siteno.startsWith('M')) {
+        } else if (siteno.startsWith('M')) {
           channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-800 font-semibold rounded mr-1.5">เมกาโฮม</span>';
           branchFullName = branchFullName.replace(/^เมกาโฮม[\s-]/, '');
-        } else if (item.siteno.startsWith('S')) {
+        } else if (siteno.startsWith('S')) {
           channelBadge = '<span class="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-800 font-semibold rounded mr-1.5">โฮมโปร</span>';
           branchFullName = branchFullName.replace(/^โฮมโปร[\s-]/, '');
         }
 
-        const retailPrice = priceMap[item.artno];
+        const artno = String(item.artno || '').trim();
+        const artdesc = String(item.artdesc || '').trim();
+        const perioddate = String(item.perioddate || '').trim() || '30/09/2026';
+        const retailPrice = priceMap[artno];
         const retailPriceCell = retailPrice ? `฿${retailPrice.toLocaleString()}` : '<span class="text-slate-400 font-mono text-xs">-</span>';
 
         tr.innerHTML = `
-          <td class="py-3 px-3 font-mono text-xs text-blue-900 font-semibold bg-blue-50/40">${item.perioddate || '30/09/2026'}</td>
-          <td class="py-3 px-3 font-mono font-medium text-slate-900">${item.artno}</td>
-          <td class="py-3 px-4 text-slate-800 font-medium">${item.artdesc}</td>
+          <td class="py-3 px-3 font-mono text-xs text-blue-900 font-semibold bg-blue-50/40">${perioddate}</td>
+          <td class="py-3 px-3 font-mono font-medium text-slate-900">${artno}</td>
+          <td class="py-3 px-4 text-slate-800 font-medium">${artdesc}</td>
           <td class="py-3 px-3 text-slate-800 font-medium">${channelBadge}${branchFullName}</td>
           <td class="py-3 px-3 text-right font-mono font-semibold text-indigo-950 bg-indigo-50/30">${retailPriceCell}</td>
-          <td class="py-3 px-3 text-right font-mono font-medium ${item.onhandqty < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}">${item.onhandqty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
-          <td class="py-3 px-4 text-right font-mono font-semibold ${item.onhandvalue < 0 ? 'text-red-600 font-bold' : 'text-slate-900'}">฿${item.onhandvalue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-3 text-right font-mono font-medium ${qty < 0 ? 'text-red-600 font-bold' : 'text-slate-800'}">${qty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})}</td>
+          <td class="py-3 px-4 text-right font-mono font-semibold ${val < 0 ? 'text-red-600 font-bold' : 'text-slate-900'}">฿${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
           <td class="py-3 px-3 text-center">${statusBadge}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      document.getElementById('row-count-badge').textContent = `แสดง ${filteredData.length} จาก ${rawStockData.length} รายการ`;
-      document.getElementById('table-subtotal-qty').textContent = sumQty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
-      document.getElementById('table-subtotal-val').textContent = `฿${sumVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      const countBadge = document.getElementById('row-count-badge');
+      if (countBadge) countBadge.textContent = `แสดง ${filteredData.length} จาก ${rawStockData.length} รายการ`;
+      const subtotalQty = document.getElementById('table-subtotal-qty');
+      if (subtotalQty) subtotalQty.textContent = sumQty.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+      const subtotalVal = document.getElementById('table-subtotal-val');
+      if (subtotalVal) subtotalVal.textContent = `฿${sumVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     function applyFilters() {
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const group = document.getElementById('groupFilter').value;
-      const channel = document.getElementById('channelFilter').value;
-      const status = document.getElementById('statusFilter').value;
+      const q = (document.getElementById('searchInput') ? document.getElementById('searchInput').value : '').trim().toLowerCase();
+      const group = document.getElementById('groupFilter') ? document.getElementById('groupFilter').value : 'ALL';
+      const channel = document.getElementById('channelFilter') ? document.getElementById('channelFilter').value : 'ALL';
+      const status = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'ALL';
 
       filteredData = rawStockData.filter(item => {
+        const artno = String(item.artno || '').toLowerCase();
+        const artdesc = String(item.artdesc || '').toLowerCase();
+        const siteno = String(item.siteno || '').toLowerCase();
+        const sitename = String(item.sitename || '').toLowerCase();
+        const qty = typeof item.onhandqty === 'number' ? item.onhandqty : (parseFloat(item.onhandqty) || 0);
+
         // Search text
         if (q) {
-          const match = item.artno.toLowerCase().includes(q) || 
-                        item.artdesc.toLowerCase().includes(q) || 
-                        item.siteno.toLowerCase().includes(q) || 
-                        item.sitename.toLowerCase().includes(q);
+          const match = artno.includes(q) || artdesc.includes(q) || siteno.includes(q) || sitename.includes(q);
           if (!match) return false;
         }
 
         // Group filter
-        if (group !== 'ALL' && !item.artdesc.includes(group)) {
+        if (group !== 'ALL' && !artdesc.includes(group.toLowerCase())) {
           return false;
         }
 
         // Channel filter
-        if (channel === 'DC' && !item.siteno.startsWith('DC')) return false;
-        if (channel === 'MEGA' && !item.siteno.startsWith('M')) return false;
-        if (channel === 'HOMEPRO' && !item.siteno.startsWith('S')) return false;
+        if (channel === 'DC' && !siteno.startsWith('dc')) return false;
+        if (channel === 'MEGA' && !siteno.startsWith('m')) return false;
+        if (channel === 'HOMEPRO' && !siteno.startsWith('s')) return false;
 
         // Status filter
-        if (status === 'NORMAL' && item.onhandqty <= 0) return false;
-        if (status === 'NEGATIVE' && item.onhandqty >= 0) return false;
-        if (status === 'ZERO' && item.onhandqty !== 0) return false;
+        if (status === 'NORMAL' && qty <= 0) return false;
+        if (status === 'NEGATIVE' && qty >= 0) return false;
+        if (status === 'ZERO' && qty !== 0) return false;
 
         return true;
       });
@@ -1740,19 +2096,28 @@
     }
 
     function filterNegativeOnly() {
-      document.getElementById('statusFilter').value = 'NEGATIVE';
-      document.getElementById('groupFilter').value = 'ALL';
-      document.getElementById('channelFilter').value = 'ALL';
-      document.getElementById('searchInput').value = '';
+      const s = document.getElementById('statusFilter');
+      if (s) s.value = 'NEGATIVE';
+      const g = document.getElementById('groupFilter');
+      if (g) g.value = 'ALL';
+      const c = document.getElementById('channelFilter');
+      if (c) c.value = 'ALL';
+      const q = document.getElementById('searchInput');
+      if (q) q.value = '';
       applyFilters();
-      document.getElementById('stockTable').scrollIntoView({ behavior: 'smooth' });
+      const table = document.getElementById('stockTable');
+      if (table) table.scrollIntoView({ behavior: 'smooth' });
     }
 
     function resetFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('groupFilter').value = 'ALL';
-      document.getElementById('channelFilter').value = 'ALL';
-      document.getElementById('statusFilter').value = 'ALL';
+      const q = document.getElementById('searchInput');
+      if (q) q.value = '';
+      const g = document.getElementById('groupFilter');
+      if (g) g.value = 'ALL';
+      const c = document.getElementById('channelFilter');
+      if (c) c.value = 'ALL';
+      const s = document.getElementById('statusFilter');
+      if (s) s.value = 'ALL';
       applyFilters();
     }
 
@@ -1776,9 +2141,13 @@
         }
         let valA = a[currentSort.col];
         let valB = b[currentSort.col];
-        if (typeof valA === 'string') {
-          return currentSort.desc ? valB.localeCompare(valA, 'th') : valA.localeCompare(valB, 'th');
+        if (typeof valA === 'string' || typeof valB === 'string') {
+          return currentSort.desc 
+            ? String(valB || '').localeCompare(String(valA || ''), 'th') 
+            : String(valA || '').localeCompare(String(valB || ''), 'th');
         }
+        valA = typeof valA === 'number' ? valA : (parseFloat(valA) || 0);
+        valB = typeof valB === 'number' ? valB : (parseFloat(valB) || 0);
         return currentSort.desc ? valB - valA : valA - valB;
       });
     }
@@ -1786,23 +2155,105 @@
     function exportToCSV() {
       let csvContent = "\uFEFFPERIODDATE,ARTNO,ARTDESC,SITENAME,ONHANDQTY,ONHANDVALUE,RETAIL_PRICE\n";
       filteredData.forEach(r => {
-        let branchFullName = r.sitename;
-        if (r.siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
+        const siteno = String(r.siteno || '').trim();
+        let branchFullName = String(r.sitename || '').trim() || siteno;
+        if (siteno.startsWith('S') && !branchFullName.startsWith('โฮมโปร')) {
           branchFullName = 'โฮมโปร ' + branchFullName;
-        } else if (r.siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
+        } else if (siteno.startsWith('DC') && !branchFullName.includes('คลัง')) {
           branchFullName = 'คลังศูนย์กระจายสินค้า ' + branchFullName;
         }
         const pPrice = priceMap[r.artno] || '';
-        csvContent += `"${r.perioddate || '30/09/2026'}","${r.artno}","${r.artdesc.replace(/"/g, '""')}","${branchFullName.replace(/"/g, '""')}",${r.onhandqty},${r.onhandvalue.toFixed(2)},"${pPrice}"\n`;
+        const qty = typeof r.onhandqty === 'number' ? r.onhandqty : (parseFloat(r.onhandqty) || 0);
+        const val = typeof r.onhandvalue === 'number' ? r.onhandvalue : (parseFloat(r.onhandvalue) || 0);
+        const desc = String(r.artdesc || '').replace(/"/g, '""');
+        const branch = branchFullName.replace(/"/g, '""');
+        csvContent += `"${r.perioddate || '30/09/2026'}","${r.artno}","${desc}","${branch}",${qty},${val.toFixed(2)},"${pPrice}"\n`;
       });
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `Stock_PTI_30_9_2026_${new Date().toISOString().slice(0,10)}.csv`);
+      link.setAttribute("download", `Stock_PTI_Phayanak_${new Date().toISOString().slice(0,10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    // Master 20 Retail & Promotional Items (พญานาค ซื้อ 1 แถม 1)
+    const promoItemsMaster = [
+      { artno: "1132398", desc: "สายยางเขียว 1/2\" 5M พญานาค", price: 127 },
+      { artno: "1132553", desc: "สายยางใส 5/8\" 5M พญานาค", price: 137 },
+      { artno: "1132473", desc: "สายยางใส 3/4\" 5M พญานาค", price: 187 },
+      { artno: "1132552", desc: "สายยางใส 1/2\" 10M พญานาค", price: 187 },
+      { artno: "1133007", desc: "สายยางใส 1/2\" 10M พญานาค (เกรด A)", price: 197 },
+      { artno: "1132525", desc: "สายยางเขียว 5/8\" 10M พญานาค", price: 247 },
+      { artno: "1133267", desc: "สายยางใส 5/8\" 10M พญานาค", price: 247 },
+      { artno: "1132571", desc: "สายยางเขียว 3/4\" 10M พญานาค", price: 257 },
+      { artno: "1132493", desc: "สายยางเขียว 1/2\" 10M พญานาค", price: 267 },
+      { artno: "1132399", desc: "สายยางเขียว 5/8\" 10M พญานาค (เกรด A)", price: 277 },
+      { artno: "1132972", desc: "สายยางใส 3/4\" 10M พญานาค", price: 347 },
+      { artno: "1132849", desc: "สายยางใส 1/2\" 20M พญานาค", price: 397 },
+      { artno: "1132573", desc: "สายยางเขียว 3/4\" 20M พญานาค", price: 397 },
+      { artno: "1132505", desc: "สายยางเขียว 5/8\" 20M พญานาค", price: 447 },
+      { artno: "1155951", desc: "สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x10M", price: 447 },
+      { artno: "1132574", desc: "สายยางเขียว 1\" 20M. พญานาค", price: 497 },
+      { artno: "1145498", desc: "สายยางใส 1\" 10M พญานาค", price: 537 },
+      { artno: "1155961", desc: "สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x10M", price: 627 },
+      { artno: "1155903", desc: "สายยางเด้ง PVC ฟ้ามัน พญานาค 5/8\"x20M", price: 887 },
+      { artno: "1155877", desc: "สายยางเด้ง PVC ฟ้ามัน พญานาค 3/4\"x20M", price: 1127 }
+    ];
+
+    function renderPriceMaster(data) {
+      const tbody = document.getElementById('promoTableBody');
+      const tfoot = document.getElementById('promoTableFoot');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      let sumPrice = 0;
+      let sumAvgPrice = 0;
+
+      const descDict = {};
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          const artno = String(item.artno || '').trim();
+          const desc = String(item.artdesc || '').trim();
+          if (artno && desc && !descDict[artno]) {
+            descDict[artno] = desc;
+          }
+        });
+      }
+
+      promoItemsMaster.forEach((p, idx) => {
+        sumPrice += p.price;
+        const avgPerRoll = p.price / 2;
+        sumAvgPrice += avgPerRoll;
+        const finalDesc = descDict[p.artno] || p.desc;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-center font-bold text-slate-500">${idx + 1}</td>
+          <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${p.artno}</td>
+          <td class="py-2.5 px-4 font-medium text-slate-800">${finalDesc}</td>
+          <td class="py-2.5 px-4 text-right font-mono font-bold text-indigo-950 bg-indigo-50/40">฿${p.price.toLocaleString()}</td>
+          <td class="py-2.5 px-4 text-center">
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-300">ซื้อ 1 แถม 1</span>
+          </td>
+          <td class="py-2.5 px-4 text-right font-mono font-bold text-amber-900 bg-amber-50/50">฿${avgPerRoll.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr>
+            <td colspan="3" class="py-3 px-4 text-right text-slate-900">รวมราคาปกติ 20 รายการ (Total Retail Price):</td>
+            <td class="py-3 px-4 text-right font-mono text-indigo-900 bg-indigo-100/60 text-base">฿${sumPrice.toLocaleString()}</td>
+            <td class="py-3 px-4 text-center text-xs text-emerald-800 font-bold">โปรโมชั่น 1 แถม 1</td>
+            <td class="py-3 px-4 text-right font-mono text-amber-900 bg-amber-100/60 text-base">฿${sumAvgPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          </tr>
+        `;
+      }
     }
 
     // Chart instances
@@ -1810,162 +2261,284 @@
     let trendChartInstance = null;
     let branchChartInstance = null;
 
+    // Dual-Engine Fallback Renderer (Ensures infographics NEVER disappear even offline or CDN blocked)
+    function renderFallbackCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap) {
+      const catFb = document.getElementById('categoryFallback');
+      if (catFb) {
+        const catItems = [
+          { name: 'สายยางใส', val: clearVal, color: '#2563eb' },
+          { name: 'สายยางเขียว', val: greenVal, color: '#10b981' },
+          { name: 'สายยางเด้ง ฟ้ามัน', val: elasticVal, color: '#0284c7' },
+          { name: 'สายยางม้วน PVC', val: rollVal, color: '#f59e0b' }
+        ];
+        let trackHtml = '<div class="fallback-meter-track">';
+        let rowsHtml = '';
+        catItems.forEach(item => {
+          const pct = totalVal > 0 ? ((item.val / totalVal) * 100).toFixed(1) : '0';
+          trackHtml += `<div class="fallback-meter-seg" style="width:${pct}%; background-color:${item.color};" title="${item.name}: ${pct}%"></div>`;
+          rowsHtml += `
+            <div class="fallback-stat-row">
+              <span class="flex items-center gap-1.5 font-medium text-slate-700">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${item.color};"></span>
+                ${item.name}
+              </span>
+              <span class="font-mono font-semibold text-slate-900">฿${Math.round(item.val).toLocaleString()} <span class="text-xs text-slate-500 font-normal">(${pct}%)</span></span>
+            </div>
+          `;
+        });
+        trackHtml += '</div>';
+        catFb.innerHTML = trackHtml + rowsHtml;
+      }
+
+      const trendFb = document.getElementById('trendFallback');
+      if (trendFb) {
+        const selGid = document.getElementById('sheetSelector') ? document.getElementById('sheetSelector').value : '';
+        const trendPoints = [
+          { date: '8 มิ.ย. 26', val: 1417737.42, note: 'สต็อกต้นงวด' },
+          { date: '16 ก.ค. 26', val: 1238958.92, note: '-12.6%' },
+          { date: '17 ส.ค. 26', val: 1119305.93, note: '-9.7%' },
+          { date: '15 ก.ย. 26', val: 1027616.02, note: '-8.2%' },
+          { date: '30 ก.ย. 26', val: 898891.35, note: '-12.5%' }
+        ];
+        if (selGid === 'import_16_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('16/10/2026'))) {
+          trendPoints.push({ date: '16 ต.ค. 26', val: totalVal, note: 'ล่าสุด' });
+        } else if (selGid === 'import_7_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('07/10/2026'))) {
+          trendPoints.push({ date: '07 ต.ค. 26', val: totalVal, note: 'งวดก่อน' });
+        }
+        const maxVal = 1450000;
+        let html = '<div style="display:flex; flex-direction:column; gap:6px; width:100%;">';
+        trendPoints.forEach(p => {
+          const widthPct = Math.min(100, Math.max(10, (p.val / maxVal) * 100)).toFixed(1);
+          html += `
+            <div>
+              <div class="flex justify-between text-xs font-medium text-slate-700">
+                <span>${p.date}</span>
+                <span class="font-mono font-bold text-blue-900">฿${Math.round(p.val).toLocaleString()} <span class="text-emerald-700 font-normal">(${p.note})</span></span>
+              </div>
+              <div style="background:#e2e8f0; height:8px; border-radius:9999px; overflow:hidden; margin-top:2px;">
+                <div style="background:#2563eb; width:${widthPct}%; height:100%; border-radius:9999px;"></div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        trendFb.innerHTML = html;
+      }
+
+      const branchFb = document.getElementById('branchFallback');
+      if (branchFb) {
+        const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+        const maxVal = sortedBranches.length > 0 ? sortedBranches[0][1] : 1;
+        let html = '<div style="display:flex; flex-direction:column; gap:6px; width:100%;">';
+        sortedBranches.forEach(([name, val], idx) => {
+          const widthPct = Math.min(100, Math.max(8, (val / maxVal) * 100)).toFixed(1);
+          html += `
+            <div>
+              <div class="flex justify-between text-xs font-medium text-slate-700">
+                <span class="truncate max-w-[160px]">${idx + 1}. ${name}</span>
+                <span class="font-mono font-bold text-indigo-950">฿${Math.round(val).toLocaleString()}</span>
+              </div>
+              <div style="background:#e2e8f0; height:8px; border-radius:9999px; overflow:hidden; margin-top:2px;">
+                <div style="background:#4f46e5; width:${widthPct}%; height:100%; border-radius:9999px;"></div>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        branchFb.innerHTML = html;
+      }
+    }
+
     // Render / Update Visual Infographic Charts
     function renderCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap) {
-      if (typeof Chart === 'undefined') {
-        console.warn('Chart.js is not loaded');
+      const hasChartJs = typeof Chart !== 'undefined';
+
+      const catCanvas = document.getElementById('categoryChart');
+      const catFb = document.getElementById('categoryFallback');
+      const trendCanvas = document.getElementById('trendChart');
+      const trendFb = document.getElementById('trendFallback');
+      const branchCanvas = document.getElementById('branchChart');
+      const branchFb = document.getElementById('branchFallback');
+
+      if (!hasChartJs) {
+        if (catCanvas) catCanvas.style.display = 'none';
+        if (trendCanvas) trendCanvas.style.display = 'none';
+        if (branchCanvas) branchCanvas.style.display = 'none';
+        if (catFb) catFb.style.display = 'flex';
+        if (trendFb) trendFb.style.display = 'flex';
+        if (branchFb) branchFb.style.display = 'flex';
+        renderFallbackCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap);
         return;
       }
 
-      // 1. Category Chart (Doughnut)
-      const catCanvas = document.getElementById('categoryChart');
-      if (catCanvas) {
-        if (categoryChartInstance) {
-          categoryChartInstance.destroy();
-        }
-        categoryChartInstance = new Chart(catCanvas.getContext('2d'), {
-          type: 'doughnut',
-          data: {
-            labels: ['สายยางใส', 'สายยางเขียว', 'สายยางเด้ง ฟ้ามัน', 'สายยางม้วน PVC'],
-            datasets: [{
-              data: [clearVal, greenVal, elasticVal, rollVal],
-              backgroundColor: ['#2563eb', '#10b981', '#0284c7', '#f59e0b'],
-              borderWidth: 2,
-              borderColor: '#ffffff'
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '62%',
-            plugins: {
-              legend: { 
-                position: 'bottom', 
-                labels: { 
-                  font: { family: 'Sarabun', size: 11, weight: '500' },
-                  boxWidth: 12,
-                  padding: 12
-                } 
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${totalVal > 0 ? ((ctx.raw/totalVal)*100).toFixed(1) : 0}%)`
-                }
-              }
-            }
+      // Chart.js loaded: activate native Canvas and hide fallback containers
+      if (catFb) catFb.style.display = 'none';
+      if (trendFb) trendFb.style.display = 'none';
+      if (branchFb) branchFb.style.display = 'none';
+      if (catCanvas) catCanvas.style.display = 'block';
+      if (trendCanvas) trendCanvas.style.display = 'block';
+      if (branchCanvas) branchCanvas.style.display = 'block';
+
+      try {
+        // 1. Category Chart (Doughnut)
+        if (catCanvas) {
+          if (categoryChartInstance) {
+            categoryChartInstance.destroy();
           }
-        });
-      }
-
-      // 2. Trend Chart (Line)
-      const trendCanvas = document.getElementById('trendChart');
-      if (trendCanvas) {
-        if (trendChartInstance) {
-          trendChartInstance.destroy();
-        }
-
-        let trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26', '30 ก.ย. 26'];
-        let trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02, 898891.35];
-
-        const selGid = document.getElementById('sheetSelector') ? document.getElementById('sheetSelector').value : '';
-        if (selGid === 'import_7_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('10/2026'))) {
-          trendLabels.push('07 ต.ค. 26');
-          trendData.push(totalVal);
-        } else if (selGid === '1943525185') {
-          trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26'];
-          trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02];
-        }
-
-        trendChartInstance = new Chart(trendCanvas.getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: trendLabels,
-            datasets: [{
-              label: 'มูลค่าสต็อกคงเหลือ (บาท)',
-              data: trendData,
-              borderColor: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.12)',
-              fill: true,
-              tension: 0.35,
-              pointRadius: 5,
-              pointBackgroundColor: '#1d4ed8',
-              pointHoverRadius: 7
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
-                }
-              }
+          categoryChartInstance = new Chart(catCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['สายยางใส', 'สายยางเขียว', 'สายยางเด้ง ฟ้ามัน', 'สายยางม้วน PVC'],
+              datasets: [{
+                data: [clearVal, greenVal, elasticVal, rollVal],
+                backgroundColor: ['#2563eb', '#10b981', '#0284c7', '#f59e0b'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+              }]
             },
-            scales: {
-              y: {
-                ticks: { 
-                  callback: (v) => '฿' + (v >= 1000000 ? (v/1000000).toFixed(2) + 'M' : (v/1000).toFixed(0) + 'k'),
-                  font: { family: 'Sarabun', size: 10 }
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '62%',
+              plugins: {
+                legend: { 
+                  position: 'bottom', 
+                  labels: { 
+                    font: { family: 'Sarabun', size: 11, weight: '500' },
+                    boxWidth: 12,
+                    padding: 12
+                  } 
                 },
-                grid: { color: 'rgba(226, 232, 240, 0.6)' }
-              },
-              x: {
-                ticks: { font: { family: 'Sarabun', size: 10 } },
-                grid: { display: false }
-              }
-            }
-          }
-        });
-      }
-
-      // 3. Branch Chart (Horizontal Bar)
-      const branchCanvas = document.getElementById('branchChart');
-      if (branchCanvas) {
-        if (branchChartInstance) {
-          branchChartInstance.destroy();
-        }
-        const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
-        branchChartInstance = new Chart(branchCanvas.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: sortedBranches.map(b => b[0].length > 18 ? b[0].slice(0,18)+'..' : b[0]),
-            datasets: [{
-              label: 'มูลค่าสต็อก (บาท)',
-              data: sortedBranches.map(b => b[1]),
-              backgroundColor: '#4f46e5',
-              hoverBackgroundColor: '#4338ca',
-              borderRadius: 6
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${totalVal > 0 ? ((ctx.raw/totalVal)*100).toFixed(1) : 0}%)`
+                  }
                 }
               }
+            }
+          });
+        }
+
+        // 2. Trend Chart (Line)
+        if (trendCanvas) {
+          if (trendChartInstance) {
+            trendChartInstance.destroy();
+          }
+
+          let trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26', '30 ก.ย. 26'];
+          let trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02, 898891.35];
+
+          const selGid = document.getElementById('sheetSelector') ? document.getElementById('sheetSelector').value : '';
+          if (selGid === 'import_16_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('16/10/2026'))) {
+            trendLabels.push('16 ต.ค. 26');
+            trendData.push(totalVal);
+          } else if (selGid === 'import_7_10' || (rawStockData[0] && String(rawStockData[0].perioddate).includes('07/10/2026'))) {
+            trendLabels.push('07 ต.ค. 26');
+            trendData.push(totalVal);
+          } else if (selGid === '1943525185') {
+            trendLabels = ['8 มิ.ย. 26', '16 ก.ค. 26', '17 ส.ค. 26', '15 ก.ย. 26'];
+            trendData = [1417737.42, 1238958.92, 1119305.93, 1027616.02];
+          }
+
+          trendChartInstance = new Chart(trendCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: trendLabels,
+              datasets: [{
+                label: 'มูลค่าสต็อกคงเหลือ (บาท)',
+                data: trendData,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 5,
+                pointBackgroundColor: '#1d4ed8',
+                pointHoverRadius: 7
+              }]
             },
-            scales: {
-              x: {
-                ticks: { 
-                  callback: (v) => '฿' + (v/1000).toFixed(0) + 'k',
-                  font: { family: 'Sarabun', size: 10 }
-                },
-                grid: { color: 'rgba(226, 232, 240, 0.6)' }
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                  }
+                }
               },
-              y: {
-                ticks: { font: { family: 'Sarabun', size: 10, weight: '500' } },
-                grid: { display: false }
+              scales: {
+                y: {
+                  ticks: { 
+                    callback: (v) => '฿' + (v >= 1000000 ? (v/1000000).toFixed(2) + 'M' : (v/1000).toFixed(0) + 'k'),
+                    font: { family: 'Sarabun', size: 10 }
+                  },
+                  grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                },
+                x: {
+                  ticks: { font: { family: 'Sarabun', size: 10 } },
+                  grid: { display: false }
+                }
               }
             }
+          });
+        }
+
+        // 3. Branch Chart (Horizontal Bar)
+        if (branchCanvas) {
+          if (branchChartInstance) {
+            branchChartInstance.destroy();
           }
-        });
+          const sortedBranches = Object.entries(branchMap).sort((a,b) => b[1] - a[1]).slice(0, 7);
+          branchChartInstance = new Chart(branchCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: sortedBranches.map(b => b[0].length > 18 ? b[0].slice(0,18)+'..' : b[0]),
+              datasets: [{
+                label: 'มูลค่าสต็อก (บาท)',
+                data: sortedBranches.map(b => b[1]),
+                backgroundColor: '#4f46e5',
+                hoverBackgroundColor: '#4338ca',
+                borderRadius: 6
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => ` ฿${ctx.raw.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  ticks: { 
+                    callback: (v) => '฿' + (v/1000).toFixed(0) + 'k',
+                    font: { family: 'Sarabun', size: 10 }
+                  },
+                  grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                },
+                y: {
+                  ticks: { font: { family: 'Sarabun', size: 10, weight: '500' } },
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Canvas rendering error, triggering fallback charts:', e);
+        if (catCanvas) catCanvas.style.display = 'none';
+        if (trendCanvas) trendCanvas.style.display = 'none';
+        if (branchCanvas) branchCanvas.style.display = 'none';
+        if (catFb) catFb.style.display = 'flex';
+        if (trendFb) trendFb.style.display = 'flex';
+        if (branchFb) branchFb.style.display = 'flex';
+        renderFallbackCharts(clearVal, greenVal, elasticVal, rollVal, totalVal, branchMap);
       }
     }
 
@@ -2148,6 +2721,9 @@
       // Update Top 10 SKUs Pareto table
       renderTop10Table(skuMap, totalVal);
 
+      // Update 20 Promotional / Retail Price Master table
+      renderPriceMaster(rawStockData);
+
       // Re-apply filters and render main table
       doSort();
       renderTable();
@@ -2254,8 +2830,8 @@
       const fileName = file.name.toLowerCase();
       const isExcel = fileName.endsWith('.xls') || fileName.endsWith('.xlsx');
 
-      // Auto-detect date from file name (e.g. Stock PTI 7_10_2026.xls -> 07/10/2026)
-      let detectedDate = '07/10/2026';
+      // Auto-detect date from file name (e.g. Stock PTI 16_10_2026.xls -> 16/10/2026)
+      let detectedDate = '16/10/2026';
       const mDate = file.name.match(/(\d{1,2})[_.-](\d{1,2})[_.-](\d{4})/);
       if (mDate) {
         detectedDate = `${mDate[1].padStart(2, '0')}/${mDate[2].padStart(2, '0')}/${mDate[3]}`;
@@ -2283,19 +2859,33 @@
 
           try {
             localStorage.setItem('cached_stock_imported_file', JSON.stringify(parsed));
-            if (file.name.includes('7_10') || detectedDate === '07/10/2026') {
-              localStorage.setItem('cached_stock_7_10_2026', JSON.stringify(parsed));
+            if (file.name.includes('16_10') || detectedDate === '16/10/2026') {
+              localStorage.setItem('cached_stock_16_10_2026', JSON.stringify(parsed));
               if (selector) {
-                let opt710 = selector.querySelector('option[value="import_7_10"]');
-                if (opt710) {
-                  opt710.textContent = `⭐ งวดล่าสุด: 07 ต.ค. 26 (${file.name})`;
-                  selector.value = 'import_7_10';
+                let opt1610 = selector.querySelector('option[value="import_16_10"]');
+                if (opt1610) {
+                  opt1610.textContent = `⭐ งวดล่าสุด: 16 ต.ค. 26 (${file.name})`;
+                  selector.value = 'import_16_10';
                 }
               }
               const banner = document.getElementById('latestUpdateBanner');
               if (banner) {
                 banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
                 banner.innerHTML = `<span>✅ โหลดข้อมูลสต็อกล่าสุด <strong>${file.name}</strong> (${detectedDate}) เข้าสู่แดชบอร์ดเรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
+              }
+            } else if (file.name.includes('7_10') || detectedDate === '07/10/2026') {
+              localStorage.setItem('cached_stock_7_10_2026', JSON.stringify(parsed));
+              if (selector) {
+                let opt710 = selector.querySelector('option[value="import_7_10"]');
+                if (opt710) {
+                  opt710.textContent = `งวด 07 ต.ค. 26 (${file.name})`;
+                  selector.value = 'import_7_10';
+                }
+              }
+              const banner = document.getElementById('latestUpdateBanner');
+              if (banner) {
+                banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+                banner.innerHTML = `<span>✅ โหลดข้อมูลสต็อก <strong>${file.name}</strong> (${detectedDate}) เข้าสู่แดชบอร์ดเรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
               }
             }
           } catch (err) {}
@@ -2626,6 +3216,24 @@
 
     // 5. Switch Sheet Period Handler
     async function switchSheet(gid) {
+      if (gid === 'import_16_10') {
+        const cached1610 = localStorage.getItem('cached_stock_16_10_2026');
+        if (cached1610) {
+          try {
+            const parsed1610 = JSON.parse(cached1610);
+            if (Array.isArray(parsed1610) && parsed1610.length > 0) {
+              rawStockData = parsed1610;
+              const badgeEl = document.querySelector('header span.text-blue-200');
+              if (badgeEl) badgeEl.textContent = 'อัปเดตล่าสุด: 16 ตุลาคม 2026 (Stock PTI 16_10_2026)';
+              updateDashboard(rawStockData);
+              showToast(`✅ แสดงผลข้อมูลงวดล่าสุด 16 ต.ค. 2026 (${rawStockData.length} รายการ)`, 'success');
+              return;
+            }
+          } catch (e) {}
+        }
+        document.getElementById('csvFileInput').click();
+        return;
+      }
       if (gid === 'import_7_10') {
         const cached710 = localStorage.getItem('cached_stock_7_10_2026');
         if (cached710) {
@@ -2636,7 +3244,7 @@
               const badgeEl = document.querySelector('header span.text-blue-200');
               if (badgeEl) badgeEl.textContent = 'อัปเดตล่าสุด: 07 ตุลาคม 2026 (Stock PTI 7_10_2026)';
               updateDashboard(rawStockData);
-              showToast(`✅ แสดงผลข้อมูลงวดล่าสุด 07 ต.ค. 2026 (${rawStockData.length} รายการ)`, 'success');
+              showToast(`✅ แสดงผลข้อมูล 07 ต.ค. 2026 (${rawStockData.length} รายการ)`, 'success');
               return;
             }
           } catch (e) {}
@@ -2695,40 +3303,70 @@
       await syncFromGoogleSheets();
     }
 
-    // 5.1 Auto-Load Local Stock PTI 7_10_2026 file if available on server
+    // 5.1 Auto-Load Local Stock PTI 16_10_2026 / 7_10_2026 file if available on server
     async function tryAutoLoadLocalExcel() {
-      const candidateFiles = ['Stock PTI 7_10_2026.xls', 'Stock_PTI_7_10_2026.csv', 'Stock PTI 7_10_2026.csv'];
-      for (const f of candidateFiles) {
+      const candidateFiles = [
+        { name: 'Stock PTI 16_10_2026.xls', date: '16/10/2026', key: 'cached_stock_16_10_2026', opt: 'import_16_10' },
+        { name: 'Stock_PTI_16_10_2026.xls', date: '16/10/2026', key: 'cached_stock_16_10_2026', opt: 'import_16_10' },
+        { name: 'Stock PTI 16_10_2026.csv', date: '16/10/2026', key: 'cached_stock_16_10_2026', opt: 'import_16_10' },
+        { name: 'Stock PTI 7_10_2026.xls', date: '07/10/2026', key: 'cached_stock_7_10_2026', opt: 'import_7_10' },
+        { name: 'Stock_PTI_7_10_2026.csv', date: '07/10/2026', key: 'cached_stock_7_10_2026', opt: 'import_7_10' },
+        { name: 'Stock PTI 7_10_2026.csv', date: '07/10/2026', key: 'cached_stock_7_10_2026', opt: 'import_7_10' }
+      ];
+      for (const item of candidateFiles) {
         try {
-          const resp = await fetch(encodeURI(f));
+          const resp = await fetch(encodeURI(item.name));
           if (resp.ok) {
-            if (f.endsWith('.xls') || f.endsWith('.xlsx')) {
+            if (item.name.endsWith('.xls') || item.name.endsWith('.xlsx')) {
               if (typeof XLSX === 'undefined') continue;
               const buf = await resp.arrayBuffer();
               const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
               for (const s of wb.SheetNames) {
                 const csv = XLSX.utils.sheet_to_csv(wb.Sheets[s]);
-                const parsed = parseGoogleSheetCSV(csv, '07/10/2026');
+                const parsed = parseGoogleSheetCSV(csv, item.date);
                 if (parsed && parsed.length > 0) {
                   rawStockData = parsed;
-                  try { localStorage.setItem('cached_stock_7_10_2026', JSON.stringify(parsed)); } catch (e) {}
+                  try { localStorage.setItem(item.key, JSON.stringify(parsed)); } catch (e) {}
                   const selector = document.getElementById('sheetSelector');
                   if (selector) {
-                    let opt = selector.querySelector('option[value="import_7_10"]');
-                    if (opt) opt.textContent = `⭐ งวดล่าสุด: 07 ต.ค. 26 (${f})`;
-                    selector.value = 'import_7_10';
+                    let opt = selector.querySelector(`option[value="${item.opt}"]`);
+                    if (opt) opt.textContent = `⭐ งวดล่าสุด: ${item.date} (${item.name})`;
+                    selector.value = item.opt;
                   }
                   const badgeEl = document.querySelector('header span.text-blue-200');
-                  if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: 07 ตุลาคม 2026 (จากไฟล์ ${f})`;
+                  if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: ${item.date} (จากไฟล์ ${item.name})`;
                   const banner = document.getElementById('latestUpdateBanner');
                   if (banner) {
                     banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
-                    banner.innerHTML = `<span>✅ โหลดข้อมูลอัตโนมัติจาก <strong>${f}</strong> (07/10/2026) เรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
+                    banner.innerHTML = `<span>✅ โหลดข้อมูลอัตโนมัติจาก <strong>${item.name}</strong> (${item.date}) เรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
                   }
                   updateDashboard(rawStockData);
-                  showToast(`✅ โหลดข้อมูลอัตโนมัติจาก ${f} (7 ต.ค. 2026) สำเร็จ! (${parsed.length} รายการ)`, 'success');
+                  showToast(`✅ โหลดข้อมูลอัตโนมัติจาก ${item.name} (${item.date}) สำเร็จ! (${parsed.length} รายการ)`, 'success');
                   return true;
                 }
+              }
+            } else if (item.name.endsWith('.csv')) {
+              const text = await resp.text();
+              const parsed = parseGoogleSheetCSV(text, item.date);
+              if (parsed && parsed.length > 0) {
+                rawStockData = parsed;
+                try { localStorage.setItem(item.key, JSON.stringify(parsed)); } catch (e) {}
+                const selector = document.getElementById('sheetSelector');
+                if (selector) {
+                  let opt = selector.querySelector(`option[value="${item.opt}"]`);
+                  if (opt) opt.textContent = `⭐ งวดล่าสุด: ${item.date} (${item.name})`;
+                  selector.value = item.opt;
+                }
+                const badgeEl = document.querySelector('header span.text-blue-200');
+                if (badgeEl) badgeEl.textContent = `อัปเดตล่าสุด: ${item.date} (จากไฟล์ ${item.name})`;
+                const banner = document.getElementById('latestUpdateBanner');
+                if (banner) {
+                  banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+                  banner.innerHTML = `<span>✅ โหลดข้อมูลอัตโนมัติจาก <strong>${item.name}</strong> (${item.date}) เรียบร้อยแล้ว (${parsed.length} รายการ)</span>`;
+                }
+                updateDashboard(rawStockData);
+                showToast(`✅ โหลดข้อมูลอัตโนมัติจาก ${item.name} (${item.date}) สำเร็จ! (${parsed.length} รายการ)`, 'success');
+                return true;
               }
             }
           }
@@ -2762,7 +3400,7 @@
     // Initialize Dashboard
     window.addEventListener('DOMContentLoaded', () => {
       // 1. Version enforcement & stale cache eviction
-      const APP_VERSION = "2026-10-07_v7";
+      const APP_VERSION = "2026-10-16_v8";
       try {
         const lastVer = localStorage.getItem('stock_app_ver');
         if (lastVer !== APP_VERSION) {
@@ -2786,7 +3424,28 @@
         }
       }
 
-      // 3. Boot with 7 ต.ค. 2026 if cached
+      // 3. Boot with 16 ต.ค. 2026 if cached
+      const cached1610 = localStorage.getItem('cached_stock_16_10_2026');
+      if (cached1610) {
+        try {
+          const parsed1610 = JSON.parse(cached1610);
+          if (Array.isArray(parsed1610) && parsed1610.length > 0) {
+            if (selector) selector.value = 'import_16_10';
+            rawStockData = parsed1610;
+            const badgeEl = document.querySelector('header span.text-blue-200');
+            if (badgeEl) badgeEl.textContent = 'อัปเดตล่าสุด: 16 ตุลาคม 2026 (Stock PTI 16_10_2026)';
+            const banner = document.getElementById('latestUpdateBanner');
+            if (banner) {
+              banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
+              banner.innerHTML = `<span>✅ ข้อมูลสต็อกล่าสุด: <strong>16 ต.ค. 2026 (Stock PTI 16_10_2026)</strong> พร้อมแสดงผล (${parsed1610.length} รายการ)</span>`;
+            }
+            updateDashboard(rawStockData);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // 4. Boot with 7 ต.ค. 2026 if cached
       const cached710 = localStorage.getItem('cached_stock_7_10_2026');
       if (cached710) {
         try {
@@ -2799,7 +3458,7 @@
             const banner = document.getElementById('latestUpdateBanner');
             if (banner) {
               banner.className = 'bg-emerald-800 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-2 shadow border-b border-emerald-400/30 no-print';
-              banner.innerHTML = `<span>✅ ข้อมูลสต็อกล่าสุด: <strong>07 ต.ค. 2026 (Stock PTI 7_10_2026)</strong> พร้อมแสดงผล (${parsed710.length} รายการ)</span>`;
+              banner.innerHTML = `<span>✅ ข้อมูลสต็อก: <strong>07 ต.ค. 2026 (Stock PTI 7_10_2026)</strong> พร้อมแสดงผล (${parsed710.length} รายการ)</span>`;
             }
             updateDashboard(rawStockData);
             return;
@@ -2835,7 +3494,7 @@
 
       updateDashboard(rawStockData);
 
-      // Attempt background auto-load of local 7_10 file if web server allows
+      // Attempt background auto-load of local 16_10 / 7_10 file if web server allows
       tryAutoLoadLocalExcel();
     });
   </script>
